@@ -19,7 +19,6 @@ TODO: Configuration: Set shared secret
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 TODO: Add QuotaLimiter so time-based quotas can be added
 TODO: Keys should expire
-TODO: Clean up error response messages
 */
 
 var log = logrus.New()
