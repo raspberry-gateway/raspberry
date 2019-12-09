@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nu7hatch/gouuid"
 	"net/http"
-	"github.com/nu7hatch/gouuid/uuid"
 )
 
 type ApiModifyKeySuccess struct {
@@ -14,8 +14,8 @@ type ApiModifyKeySuccess struct {
 }
 
 type ApiStatusMsg struct {
-	Status string 	`json: "status"`
-	Error string	`josn: "error"`
+	Status string `json: "status"`
+	Error  string `josn: "error"`
 }
 
 func createError(errorMsg string) []byte {
@@ -24,7 +24,7 @@ func createError(errorMsg string) []byte {
 
 	if err != nil {
 		log.Error("Couldn't marshal error stats")
-		log.Error(error)
+		log.Error(err)
 	}
 
 	return responseMsg
@@ -48,7 +48,7 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			u5, err := uuid.NewV4()
 			log.Info(u5.String())
-			
+
 			if err != nil {
 				code = 400
 				log.Error("Couldn't decode body")
