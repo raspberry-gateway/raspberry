@@ -14,12 +14,12 @@ import (
 TODO: Set configuration file (Command line)
 TODO: ConfigurationL: set redis DB details
 TODO: Redis storage manager
-TODO: API endpoints for management functions: AddKey, RevokeKey, UpdateKey, GetKeyDetails, RequestKey (creates a key for user instead of self supplied)
+TODO: API endpoints for management functions: RequestKey (creates a key for user instead of self supplied)
 TODO: Secure API endpoints (perhaps with just a shared secret, should be internally used anyway)
 TODO: Configuration: Set shared secret
-TODO: Configuration: Error template file path
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 TODO: Add QuotaLimiter so time-based quotas can be added
+TODO: Keys should expire
 */
 
 var log = logrus.New()
