@@ -87,7 +87,7 @@ func main() {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
-	http.HandleFunc("/raspberry/key/", addKeyHandler)
+	http.HandleFunc("/raspberry/key/", keyHandler)
 	http.HandleFunc(config.ListenPath, handler(proxy))
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
 	err = http.ListenAndServe(targetPort, nil)
