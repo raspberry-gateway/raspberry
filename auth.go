@@ -25,16 +25,14 @@ func (b AuthorisationManager) IsKeyAuthorised(keyName string) (bool, SessionStat
 	if err != nil {
 		log.Warning("Invalid key detected, not found in storage engine")
 		return false, newSession
-	} else {
-		err := json.Unmarshal([]byte(jsonKeyVal), &newSession)
-		if err != nil {
-			log.Error("Couldn't unmarshal session object")
-			log.Error(err)
-			return false, newSession
-		} else {
-			return true, newSession
-		}
 	}
+	err = json.Unmarshal([]byte(jsonKeyVal), &newSession)
+	if err != nil {
+		log.Error("Couldn't unmarshal session object")
+		log.Error(err)
+		return false, newSession
+	}
+	return true, newSession
 }
 
 // UpdateSession updates the session in the storage engine

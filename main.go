@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/docopt/docopt.go"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -21,12 +22,57 @@ TODO: Add QuotaLimiter so time-based quotas can be added
 */
 
 var log = logrus.New()
-var authManager = AuthorisationManager{MockStorageManager{map[string]string{"1234": "{\"LastCheck\":1399469149,\"Allowance\":5.0,\"Rate\":1.0,\"Per\":1.0}"}}}
+var authManager = AuthorisationManager{}
 var sessionLimiter = SessionLimiter{}
 var config = Config{}
 
+func setupGlobals() {
+	if config.Storage.Type == "memory" {
+		authManager = AuthorisationManager{InMemoryStorageManager{map[string]string{}}}
+	}
+}
+
+func init() {
+	usage := `Raspberry API Gateway.
+	
+	Usage:
+		raspberry [options]
+
+	Options:
+		-h --help	Show this screen
+		--conf=FILE	Load a named configuration file
+		--test		Create a test key
+
+	`
+
+	arguments, err := docopt.Parse(usage, nil, true, "Raspberry v1.0", false)
+	if err != nil {
+		log.Println("Error while parsing auguments.")
+		log.Fatal(err)
+	}
+
+	filename := "raspberry.conf"
+
+	value, _ := arguments["--conf"]
+	if value != nil {
+		log.Info(fmt.Sprintf("Using %s for configuration", value.(string)))
+		filename = arguments["--conf"].(string)
+	} else {
+		log.Info("No configuration file defined, will try to use default (./raspberry.conf)")
+	}
+
+	loadConfig(filename, &config)
+	setupGlobals()
+
+	testValue, _ := arguments["--test"].(bool)
+	if testValue {
+		log.Info("Adding test key: '1234' to storage map")
+		authManager.Store.SetKey("1234", "{\"LastCheck\":1399469149,\"Allowance\":5.0,\"Rate\":1.0,\"Per\":1.0}")
+	}
+}
+
 func main() {
-	LoadConfig("respberry.conf", &config)
+	loadConfig("respberry.conf", &config)
 	remote, err := url.Parse(config.TargetUrl)
 	if err != nil {
 		log.Error(err)
@@ -47,27 +93,30 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 		authorisation := r.Header.Get("authorisation")
 		if authorisation != "" {
 			// Check if API key valid
-			key_authorised, thisSessionState := authManager.IsKeyAuthorised(authorisation)
-			if key_authorised {
+			keyAuthorised, thisSessionState := authManager.IsKeyAuthorised(authorisation)
+			if keyAuthorised {
 				// If valid, check if within rate limit
 				forwardMessage := sessionLimiter.ForwardMessage(&thisSessionState)
 				if forwardMessage {
-					success_handler(w, r, p)
+					successHandler(w, r, p)
 				} else {
-					handle_error(w, r, "Rate limit exceeded")
+					handleError(w, r, "Rate limit exceeded", 429)
 				}
+			} else {
+				handleError(w, r, "Key not authorised", 403)
 			}
+		} else {
+			handleError(w, r, "Authorisation field missing", 400)
 		}
 	}
 }
 
-func success_handler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseProxy) {
+func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseProxy) {
 	p.ServeHTTP(w, r)
 }
 
-func handle_error(w http.ResponseWriter, r *http.Request, err string) {
-	// TODO: Set this as part of function call
-	w.WriteHeader(400)
+func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int) {
+	w.WriteHeader(errCode)
 	// TODO: This should be a template
 	fmt.Fprintf(w, "NOT AUTHORISED: %s", err)
 }
