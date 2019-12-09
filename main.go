@@ -14,12 +14,12 @@ import (
 TODO: Set configuration file (Command line)
 TODO: ConfigurationL: set redis DB details
 TODO: Redis storage manager
-TODO: API endpoints for management functions: RequestKey (creates a key for user instead of self supplied)
 TODO: Secure API endpoints (perhaps with just a shared secret, should be internally used anyway)
 TODO: Configuration: Set shared secret
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 TODO: Add QuotaLimiter so time-based quotas can be added
 TODO: Keys should expire
+TODO: Clean up error response messages
 */
 
 var log = logrus.New()
@@ -31,7 +31,9 @@ var systemError string = "{\"status\": \"system error, please contact administra
 
 func setupGlobals() {
 	if config.Storage.Type == "memory" {
-		authManager = AuthorisationManager{InMemoryStorageManager{map[string]string{}}}
+		authManager = AuthorisationManager{
+			InMemoryStorageManager{
+				map[string]string{}}}
 	}
 
 	templateFile := fmt.Sprintf("%s/error.json", config.TemplatePath)
@@ -87,7 +89,8 @@ func main() {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
-	http.HandleFunc("/raspberry/key/", keyHandler)
+	http.HandleFunc("/raspberry/keys/create", createKeyHandler)
+	http.HandleFunc("/raspberry/keys/", keyHandler)
 	http.HandleFunc(config.ListenPath, handler(proxy))
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
 	err = http.ListenAndServe(targetPort, nil)
