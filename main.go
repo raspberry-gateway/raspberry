@@ -14,8 +14,6 @@ import (
 TODO: Set configuration file (Command line)
 TODO: ConfigurationL: set redis DB details
 TODO: Redis storage manager
-TODO: Secure API endpoints (perhaps with just a shared secret, should be internally used anyway)
-TODO: Configuration: Set shared secret
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 TODO: Add QuotaLimiter so time-based quotas can be added
 TODO: Keys should expire
@@ -88,8 +86,8 @@ func main() {
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
-	http.HandleFunc("/raspberry/keys/create", createKeyHandler)
-	http.HandleFunc("/raspberry/keys/", keyHandler)
+	http.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandler))
+	http.HandleFunc("/raspberry/keys/", securityHandler(keyHandler))
 	http.HandleFunc(config.ListenPath, handler(proxy))
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
 	err = http.ListenAndServe(targetPort, nil)

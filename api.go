@@ -46,8 +46,9 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error("Couldn't decode body")
 			log.Error(err)
 		} else {
-			u5, err := uuid.NewV5(uuid.NamespaceURL, []byte("raspberry.io"))
-
+			u5, err := uuid.NewV4()
+			log.Info(u5.String())
+			
 			if err != nil {
 				code = 400
 				log.Error("Couldn't decode body")
@@ -229,4 +230,16 @@ func handleDeleteKey(keyName string) ([]byte, int) {
 		return []byte(systemError), code
 	}
 	return responseMessage, code
+}
+
+func securityHandler(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		raspberryAuthKey := r.Header.Get("x-raspberry-authorisation")
+		if raspberryAuthKey != config.Secret {
+			// Error
+			handleError(w, r, "Authorisation failed", 403)
+		} else {
+			handler(w, r)
+		}
+	}
 }
