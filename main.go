@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/docopt/docopt.go"
+	"html/template"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -25,11 +26,16 @@ var log = logrus.New()
 var authManager = AuthorisationManager{}
 var sessionLimiter = SessionLimiter{}
 var config = Config{}
+var templates = &template.Template{}
+var systemError string = "{\"status\": \"system error, please contact administrator\"}"
 
 func setupGlobals() {
 	if config.Storage.Type == "memory" {
 		authManager = AuthorisationManager{InMemoryStorageManager{map[string]string{}}}
 	}
+
+	templateFile := fmt.Sprintf("%s/error.json", config.TemplatePath)
+	templates = template.Must(template.ParseFiles(templateFile))
 }
 
 func init() {
@@ -72,51 +78,20 @@ func init() {
 }
 
 func main() {
+	createSampleSession()
 	loadConfig("respberry.conf", &config)
 	remote, err := url.Parse(config.TargetUrl)
 	if err != nil {
+		log.Error("Couldn't parse target URL")
 		log.Error(err)
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(remote)
+	http.HandleFunc("/raspberry/key/", addKeyHandler)
 	http.HandleFunc(config.ListenPath, handler(proxy))
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
 	err = http.ListenAndServe(targetPort, nil)
 	if err != nil {
 		log.Error(err)
 	}
-}
-
-func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Check for API key existence
-		authorisation := r.Header.Get("authorisation")
-		if authorisation != "" {
-			// Check if API key valid
-			keyAuthorised, thisSessionState := authManager.IsKeyAuthorised(authorisation)
-			if keyAuthorised {
-				// If valid, check if within rate limit
-				forwardMessage := sessionLimiter.ForwardMessage(&thisSessionState)
-				if forwardMessage {
-					successHandler(w, r, p)
-				} else {
-					handleError(w, r, "Rate limit exceeded", 429)
-				}
-			} else {
-				handleError(w, r, "Key not authorised", 403)
-			}
-		} else {
-			handleError(w, r, "Authorisation field missing", 400)
-		}
-	}
-}
-
-func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseProxy) {
-	p.ServeHTTP(w, r)
-}
-
-func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int) {
-	w.WriteHeader(errCode)
-	// TODO: This should be a template
-	fmt.Fprintf(w, "NOT AUTHORISED: %s", err)
 }
