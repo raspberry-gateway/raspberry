@@ -12,18 +12,24 @@ type ApiError struct {
 
 func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		// Check for API key existence
 		authorisation := r.Header.Get("authorisation")
 		if authorisation != "" {
 			// Check if API key valid
 			keyAuthorised, thisSessionState := authManager.IsKeyAuthorised(authorisation)
+			keyExpired := authManager.IsKeyExpired(&thisSessionState)
 			if keyAuthorised {
-				// If valid, check if within rate limit
-				forwardMessage := sessionLimiter.ForwardMessage(&thisSessionState)
-				if forwardMessage {
-					successHandler(w, r, p)
+				if !keyExpired {
+					// If valid, check if within rate limit
+					forwardMessage := sessionLimiter.ForwardMessage(&thisSessionState)
+					if forwardMessage {
+						successHandler(w, r, p)
+					} else {
+						handleError(w, r, "Rate limit exceeded", 429)
+					}
 				} else {
-					handleError(w, r, "Rate limit exceeded", 429)
+					handleError(w, r, "Key has expired, please renew", 403)
 				}
 			} else {
 				handleError(w, r, "Key not authorised", 403)
