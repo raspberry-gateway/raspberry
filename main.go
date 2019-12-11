@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/buger/goterm"
 	"github.com/docopt/docopt.go"
 	"html/template"
 	"net/http"
@@ -24,8 +25,20 @@ var config = Config{}
 var templates = &template.Template{}
 var systemError string = "{\"status\": \"system error, please contact administrator\"}"
 
+func displayConfig() {
+	// configColor := goterm.MAGENTA
+	configTable := goterm.NewTable(0, 10, 5, ' ', 0)
+	fmt.Fprintf(configTable, "Listening on port:\t%s\n", config.ListenPort)
+	fmt.Fprintf(configTable, "Source path:\t%s\n", config.ListenPath)
+	fmt.Fprintf(configTable, "Gateway target:\t%s\n", config.TargetUrl)
+
+	fmt.Println(configTable)
+	fmt.Println("")
+}
+
 func setupGlobals() {
 	if config.Storage.Type == "memory" {
+		log.Warning("Using in-memory storage. Warning: this is not scalable.")
 		authManager = AuthorisationManager{
 			InMemoryStorageManager{
 				map[string]string{}}}
@@ -67,9 +80,17 @@ func init() {
 	setupGlobals()
 }
 
+func intro() {
+	fmt.Print("\n\n")
+	fmt.Println(goterm.Bold(goterm.Color("Raspberry.io Gateway API v0.1", goterm.GREEN)))
+	fmt.Println(goterm.Bold(goterm.Color("=============================", goterm.GREEN)))
+	fmt.Print("Copyright Lance. @2019")
+}
+
 func main() {
-	createSampleSession()
-	loadConfig("respberry.conf", &config)
+	intro()
+	displayConfig()
+
 	remote, err := url.Parse(config.TargetUrl)
 	if err != nil {
 		log.Error("Couldn't parse target URL")
