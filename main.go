@@ -16,7 +16,6 @@ TODO: ConfigurationL: set redis DB details
 TODO: Redis storage manager
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 TODO: Add QuotaLimiter so time-based quotas can be added
-TODO: Keys should expire
 */
 
 var log = logrus.New()
