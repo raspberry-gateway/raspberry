@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Sirupsen/logrus"
 	uuid "github.com/nu7hatch/gouuid"
 )
 
@@ -69,6 +70,10 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 					log.Error(err)
 					responseMessage = []byte(systemError)
 					code = 500
+				} else {
+					log.WithFields(logrus.Fields{
+						"key": keyName,
+					}).Info("Generated new key - success.")
 				}
 			}
 		}
@@ -98,6 +103,9 @@ func handleAddOrUpdate(keyName string, r *http.Request) ([]byte, int) {
 	} else {
 		// Update our session object (create it)
 		authManager.UpdateSession(keyName, newSession)
+		log.WithFields(logrus.Fields{
+			"key": keyName,
+		}).Info("New key added or updated.")
 	}
 
 	var action string
@@ -181,6 +189,13 @@ func handleGetDetail(sessionKey string) ([]byte, int) {
 		notFound := APIStatusMessage{false, "Key not found"}
 		responseMessage, _ = json.Marshal(&notFound)
 		code = 404
+		log.WithFields(logrus.Fields{
+			"key": sessionKey,
+		}).Info("Attempted key retrieval - failure.")
+	} else {
+		log.WithFields(logrus.Fields{
+			"key": sessionKey,
+		}).Info("Attempted key retrieval - seccess.")
 	}
 	return responseMessage, code
 }
@@ -207,10 +222,12 @@ func handleGetAllKeys() ([]byte, int) {
 		code = 500
 	}
 
-	if !success {
+	if success {
+		return responseMessage, code
+	} else {
+		log.Info("Attempted keys retrieval - success.")
 		return []byte(systemError), code
 	}
-	return responseMessage, code
 }
 
 func handleDeleteKey(keyName string) ([]byte, int) {
@@ -227,8 +244,12 @@ func handleDeleteKey(keyName string) ([]byte, int) {
 		log.Error(err)
 		code = 500
 		return []byte(systemError), code
+	} else {
+		log.WithFields(logrus.Fields{
+			"key": keyName,
+		}).Info("Attempted key deletion - success.")
+		return responseMessage, code
 	}
-	return responseMessage, code
 }
 
 func securityHandler(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
@@ -236,6 +257,7 @@ func securityHandler(handler func(http.ResponseWriter, *http.Request)) func(http
 		raspberryAuthKey := r.Header.Get("x-raspberry-authorisation")
 		if raspberryAuthKey != config.Secret {
 			// Error
+			log.Warning("Attempted administractive access with invalid or missing key!")
 			handleError(w, r, "Authorisation failed", 403)
 		} else {
 			handler(w, r)
