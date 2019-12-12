@@ -15,6 +15,8 @@ import (
 TODO: Set configuration file (Command line)
 TODO: ConfigurationL: set redis DB details
 TODO: Redis storage manager
+TODO: IP white list for admin functions
+TODO: Flag to record analytics
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 */
 
@@ -28,7 +30,7 @@ var systemError string = "{\"status\": \"system error, please contact administra
 func displayConfig() {
 	// configColor := goterm.MAGENTA
 	configTable := goterm.NewTable(0, 10, 5, ' ', 0)
-	fmt.Fprintf(configTable, "Listening on port:\t%s\n", config.ListenPort)
+	fmt.Fprintf(configTable, "Listening on port:\t%d\n", config.ListenPort)
 	fmt.Fprintf(configTable, "Source path:\t%s\n", config.ListenPath)
 	fmt.Fprintf(configTable, "Gateway target:\t%s\n", config.TargetUrl)
 

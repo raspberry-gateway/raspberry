@@ -12,7 +12,7 @@ func (e KeyError) Error() string {
 type StorageHandler interface {
 	GetKey(string) (string, error) // Returned string is expected to be a JSON object (SessionState)
 	SetKey(string, string)         // Second input string is expected to be a JSON object (SessionState)
-	Getkeys() []string
+	GetKeys() []string
 	DeleteKey(string) bool
 }
 

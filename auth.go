@@ -71,5 +71,5 @@ func (b AuthorisationManager) GetSessionDetail(keyName string) (SessionState, bo
 }
 
 func (b AuthorisationManager) GetSessions() []string {
-	return b.Store.Getkeys()
+	return b.Store.GetKeys()
 }

@@ -15,13 +15,13 @@ type ApiModifyKeySuccess struct {
 	Action string `json: "action"`
 }
 
-type ApiStatusMsg struct {
+type ApiStatusMessage struct {
 	Status string `json: "status"`
 	Error  string `josn: "error"`
 }
 
 func createError(errorMsg string) []byte {
-	errorObj := ApiStatusMsg{"error", errorMsg}
+	errorObj := ApiStatusMessage{"error", errorMsg}
 	responseMsg, err := json.Marshal(&errorObj)
 
 	if err != nil {
@@ -163,7 +163,7 @@ func keyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type APIStatusMessage struct {
-	Status  bool   `json: "status"`
+	Status  string `json: "status"`
 	Message string `json: "message"`
 }
 
@@ -186,7 +186,7 @@ func handleGetDetail(sessionKey string) ([]byte, int) {
 	}
 
 	if !success {
-		notFound := APIStatusMessage{false, "Key not found"}
+		notFound := APIStatusMessage{"error", "Key not found"}
 		responseMessage, _ = json.Marshal(&notFound)
 		code = 404
 		log.WithFields(logrus.Fields{
@@ -236,7 +236,7 @@ func handleDeleteKey(keyName string) ([]byte, int) {
 	authManager.Store.DeleteKey(keyName)
 	code := 200
 
-	statusObj := APIStatusMessage{true, ""}
+	statusObj := ApiModifyKeySuccess{keyName, "ok", "deleted"}
 	responseMessage, err = json.Marshal(&statusObj)
 
 	if err != nil {
