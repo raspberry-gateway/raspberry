@@ -15,13 +15,13 @@ type ApiModifyKeySuccess struct {
 	Action string `json: "action"`
 }
 
-type ApiStatusMessage struct {
+type ApiErrorMessage struct {
 	Status string `json: "status"`
 	Error  string `josn: "error"`
 }
 
 func createError(errorMsg string) []byte {
-	errorObj := ApiStatusMessage{"error", errorMsg}
+	errorObj := ApiErrorMessage{"error", errorMsg}
 	responseMsg, err := json.Marshal(&errorObj)
 
 	if err != nil {
@@ -49,7 +49,6 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 			log.Error(err)
 		} else {
 			u5, err := uuid.NewV4()
-			log.Info(u5.String())
 
 			if err != nil {
 				code = 400

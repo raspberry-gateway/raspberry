@@ -42,8 +42,13 @@ func setupGlobals() {
 	if config.Storage.Type == "memory" {
 		log.Warning("Using in-memory storage. Warning: this is not scalable.")
 		authManager = AuthorisationManager{
-			InMemoryStorageManager{
+			&InMemoryStorageManager{
 				map[string]string{}}}
+	} else if config.Storage.Type == "redis" {
+		log.Info("Using redis storage manager.")
+		authManager = AuthorisationManager{
+			&RedisStorageManager{}}
+		authManager.Store.Connect()
 	}
 
 	templateFile := fmt.Sprintf("%s/error.json", config.TemplatePath)

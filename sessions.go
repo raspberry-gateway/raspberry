@@ -39,15 +39,13 @@ func (l SessionLimiter) ForwardMessage(currentSession *SessionState) (bool, int)
 
 	if currentSession.Allowance < 1.0 {
 		return false, 1
+	} else {
+		currentSession.Allowance--
+		if !l.isQuotaExceeded(currentSession) {
+			return true, 0
+		}
+		return false, 2
 	}
-	currentSession.Allowance--
-	if !l.isQuotaExceeded(currentSession) {
-		return true, 0
-	}
-	return false, 2
-
-	currentSession.Allowance--
-	return true, 0
 }
 
 func (l SessionLimiter) isQuotaExceeded(currentSession *SessionState) bool {
