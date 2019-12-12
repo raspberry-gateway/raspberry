@@ -13,9 +13,6 @@ import (
 
 /*
 TODO: Set configuration file (Command line)
-TODO: ConfigurationL: set redis DB details
-TODO: Redis storage manager
-TODO: IP white list for admin functions
 TODO: Flag to record analytics
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 */
@@ -26,6 +23,7 @@ var sessionLimiter = SessionLimiter{}
 var config = Config{}
 var templates = &template.Template{}
 var systemError string = "{\"status\": \"system error, please contact administrator\"}"
+var analytics = RedisAnalyticsHandler{}
 
 func displayConfig() {
 	// configColor := goterm.MAGENTA
@@ -49,6 +47,18 @@ func setupGlobals() {
 		authManager = AuthorisationManager{
 			&RedisStorageManager{}}
 		authManager.Store.Connect()
+	}
+
+	if config.EnableAnalytics && config.Storage.Type != "redis" {
+		log.Panic("Analytics requires Redis Storage backend, please enable Redis in the raspberry.conf file.")
+	}
+
+	if config.EnableAnalytics {
+		log.Info("Setting up analytics DB connection")
+		analytics = RedisAnalyticsHandler{
+			RedisStorageManager{KeyPrefix: "analytics-"}}
+
+		analytics.Store.Connect()
 	}
 
 	templateFile := fmt.Sprintf("%s/error.json", config.TemplatePath)

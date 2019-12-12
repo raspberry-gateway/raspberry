@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"time"
 )
 
 type ApiError struct {
@@ -80,10 +81,42 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 }
 
 func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseProxy) {
+	if config.EnableAnalytics {
+		t := time.Now()
+		thisRecord := AnalyticsRecord{
+			r.Method,
+			r.URL.Path,
+			r.ContentLength,
+			r.Header.Get("User-agent"),
+			t.Day(),
+			t.Month(),
+			t.Year(),
+			t.Hour(),
+			200,
+		}
+		analytics.RecordHit(thisRecord)
+	}
+
 	p.ServeHTTP(w, r)
 }
 
 func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int) {
+	if config.EnableAnalytics {
+		t := time.Now()
+		thisRecord := AnalyticsRecord{
+			r.Method,
+			r.URL.Path,
+			r.ContentLength,
+			r.Header.Get("User-agent"),
+			t.Day(),
+			t.Month(),
+			t.Year(),
+			t.Hour(),
+			200,
+		}
+		analytics.RecordHit(thisRecord)
+	}
+
 	w.WriteHeader(errCode)
 	w.Header().Add("Content-Type", "application/json")
 	w.Header().Add("x-Generator", "raspberry.io")
