@@ -30,6 +30,7 @@ func WriteDefaultConf(configStruct *Config) {
 	configStruct.TargetUrl = "http://localhost:8080/api"
 	configStruct.Secret = "352d20ee67be67f6340b4c0605b044b7"
 	configStruct.TemplatePath = "templates"
+	configStruct.AuthHeaderName = "authorisation"
 	configStruct.Storage.Type = "momery"
 	configStruct.Storage.Host = "localhsot"
 	configStruct.Storage.Port = 6379
