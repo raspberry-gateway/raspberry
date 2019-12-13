@@ -45,7 +45,7 @@ func setupGlobals() {
 	} else if config.Storage.Type == "redis" {
 		log.Info("Using redis storage manager.")
 		authManager = AuthorisationManager{
-			&RedisStorageManager{}}
+			&RedisStorageManager{KeyPrefix: "apikey-"}}
 		authManager.Store.Connect()
 	}
 
