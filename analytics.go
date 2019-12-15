@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	uuid "github.com/nu7hatch/gouuid"
@@ -32,11 +33,16 @@ func (e AnalyticsError) Error() string {
 
 type AnalyticsHandler interface {
 	RecordHit(AnalyticsRecord) error
+}
+
+type Purger interface {
 	PurgeCache()
+	StartPurgeLoop(int)
 }
 
 type RedisAnalyticsHandler struct {
-	Store RedisStorageManager
+	Store *RedisStorageManager
+	Clean Purger
 }
 
 func (r RedisAnalyticsHandler) RecordHit(thisRecord AnalyticsRecord) error {
@@ -54,22 +60,68 @@ func (r RedisAnalyticsHandler) RecordHit(thisRecord AnalyticsRecord) error {
 	return nil
 }
 
-func (r RedisAnalyticsHandler) PurgeCache() {
-	// TODO: Create filename from time parameters
-	// TODO: Configurable analytics directory
-	// TODO: Configurable cache purge writer (e.g. PG)
+type CSVPurger struct {
+	Storage *RedisStorageManager
+}
 
-	outfile, _ := os.Create("test.analytics.csv")
+// StartPurgeLoop is used as a goroutine to ensure that the cache is purged
+// of analytics data (assuring size is small)
+func (c CSVPurger) StartPurgeLoop(nextCount int) {
+	time.Sleep(time.Duration(nextCount) * time.Second)
+	c.PurgeCache()
+	c.StartPurgeLoop(nextCount)
+}
+
+// PurgeCache Will pull all the analytics data from the
+// cache and drop it to a storage engine, in this case a CSV file
+func (c CSVPurger) PurgeCache() {
+	curtime := time.Now()
+	fname := fmt.Sprintf("%s%d-%s-%d-%d-%d.csv", config.AnalyticsConfig.CSVDir, curtime.Year(), curtime.Month().String(), curtime.Day(), curtime.Hour(), curtime.Minute())
+
+	ferr := os.MkdirAll(config.AnalyticsConfig.CSVDir, 0777)
+	if ferr != nil {
+		log.Error(ferr)
+	}
+	outfile, _ := os.Create(fname)
 	defer outfile.Close()
 	writer := csv.NewWriter(outfile)
 
-	var handlers = []string{"METHOD", "PATH", "SIZE", "UA", "DAY", "MONTH", "YEAR", "HOUR", "RESPONSE"}
+	headers := []string{"METHOD", "PATH", "SIZE", "UA", "DAY", "MONTH", "YEAR", "HOUR", "RESPONSE"}
 
-	err := writer.Write(handlers)
+	err := writer.Write(headers)
 	if err != nil {
-		log.Error("Failed to write file handlers!")
+		log.Error("Failed to write file headers1")
 		log.Error(err)
 	} else {
-		keyValueMap := r.Store.GetKeyAndValues()
+		keyValueMap := c.Storage.GetKeysAndValues()
+		keys := []string{}
+
+		for k, v := range keyValueMap {
+			keys = append(keys, k)
+			decoded := AnalyticsRecord{}
+			err := msgpack.Unmarshal([]byte(v), &decoded)
+			if err != nil {
+				log.Error("Couldn't unmarshal analytics data:")
+				log.Error(err)
+			} else {
+				toWrite := []string{
+					decoded.Method,
+					decoded.Path,
+					strconv.FormatInt(decoded.ContentLength, 10),
+					decoded.UserAgent,
+					strconv.Itoa(decoded.Day),
+					decoded.Month.String(),
+					strconv.Itoa(decoded.Year),
+					strconv.Itoa(decoded.Hour),
+					strconv.Itoa(decoded.ResponseCode)}
+				err := writer.Write(toWrite)
+				if err != nil {
+					log.Error("File write failed!")
+					log.Error(err)
+				}
+			}
+		}
+		writer.Flush()
+		c.Storage.DeleteKeys(keys)
 	}
 }

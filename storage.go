@@ -21,6 +21,8 @@ type StorageHandler interface {
 	GetKeys() []string
 	DeleteKey(string) bool
 	Connect() bool
+	GetKeysAndValues() map[string]string
+	DeleteKeys([]string) bool
 }
 
 // InMemoryStorageManager implements the StorageHandler interface,
@@ -58,9 +60,21 @@ func (s InMemoryStorageManager) GetKeys() []string {
 	return sessions
 }
 
+func (s InMemoryStorageManager) GetKeysAndValues() map[string]string {
+	return s.Sessions
+}
+
 // DeleteKey will remove a key from the storage engine
 func (s InMemoryStorageManager) DeleteKey(keyName string) bool {
 	delete(s.Sessions, keyName)
+	return true
+}
+
+// DeleteKeys WillBulk remove keys from session DB
+func (s InMemoryStorageManager) DeleteKeys(keys []string) bool {
+	for _, keyName := range keys {
+		delete(s.Sessions, keyName)
+	}
 	return true
 }
 
