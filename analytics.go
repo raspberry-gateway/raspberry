@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
+	"os"
 	"time"
 
 	uuid "github.com/nu7hatch/gouuid"
@@ -30,6 +32,7 @@ func (e AnalyticsError) Error() string {
 
 type AnalyticsHandler interface {
 	RecordHit(AnalyticsRecord) error
+	PurgeCache()
 }
 
 type RedisAnalyticsHandler struct {
@@ -49,4 +52,24 @@ func (r RedisAnalyticsHandler) RecordHit(thisRecord AnalyticsRecord) error {
 	}
 	r.Store.SetKey(keyName, string(encoded))
 	return nil
+}
+
+func (r RedisAnalyticsHandler) PurgeCache() {
+	// TODO: Create filename from time parameters
+	// TODO: Configurable analytics directory
+	// TODO: Configurable cache purge writer (e.g. PG)
+
+	outfile, _ := os.Create("test.analytics.csv")
+	defer outfile.Close()
+	writer := csv.NewWriter(outfile)
+
+	var handlers = []string{"METHOD", "PATH", "SIZE", "UA", "DAY", "MONTH", "YEAR", "HOUR", "RESPONSE"}
+
+	err := writer.Write(handlers)
+	if err != nil {
+		log.Error("Failed to write file handlers!")
+		log.Error(err)
+	} else {
+		keyValueMap := r.Store.GetKeyAndValues()
+	}
 }

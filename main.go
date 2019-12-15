@@ -13,7 +13,7 @@ import (
 
 /*
 TODO: Set configuration file (Command line)
-TODO: Flag to record analytics
+TODO: Analytics purge to disk / DB
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 */
 
@@ -59,6 +59,7 @@ func setupGlobals() {
 			RedisStorageManager{KeyPrefix: "analytics-"}}
 
 		analytics.Store.Connect()
+		analytics.PurgeCache()
 	}
 
 	templateFile := fmt.Sprintf("%s/error.json", config.TemplatePath)
