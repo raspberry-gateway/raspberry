@@ -9,6 +9,7 @@ import (
 
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/vmihailenco/msgpack"
+	"gopkg.in/mgo.v2"
 )
 
 // AnalyticsRecord encodes the details of a request
@@ -123,5 +124,63 @@ func (c CSVPurger) PurgeCache() {
 		}
 		writer.Flush()
 		c.Storage.DeleteKeys(keys)
+	}
+}
+
+type MongoPurger struct {
+	Store     *RedisStorageManager
+	dbSession *mgo.Session
+}
+
+func (m *MongoPurger) Connect() {
+	var err error
+	m.dbSession, err = mgo.Dial(config.AnalyticsConfig.MongoURL)
+	if err != nil {
+		log.Error("Mongo connection failed:")
+		log.Panic(err)
+	}
+}
+
+func (m MongoPurger) StartPurgeLoop(nextCount int) {
+	time.Sleep(time.Duration(nextCount) * time.Second)
+	m.PurgeCache()
+	m.StartPurgeLoop(nextCount)
+}
+
+func (m *MongoPurger) PurgeCache() {
+	if m.dbSession == nil {
+		log.Info("Not connected to analytics store, connecting...")
+		m.Connect()
+		m.PurgeCache()
+	} else {
+		analyticsCollection := m.dbSession.DB("").C(config.AnalyticsConfig.mongoCollection)
+		KeyValueMap := m.Store.GetKeysAndValues()
+
+		if len(KeyValueMap) > 0 {
+			keys := make([]interface{}, len(KeyValueMap), len(KeyValueMap))
+			keyNames := make([]string, len(KeyValueMap), len(KeyValueMap))
+
+			i := 0
+			for k, v := range KeyValueMap {
+				keyNames[i] = k
+				decoded := AnalyticsRecord{}
+				err := msgpack.Unmarshal([]byte(v), &decoded)
+				if err != nil {
+					log.Error("Couldn't unmarshal analytics data:")
+					log.Error(err)
+				} else {
+					keys[i] = interface{}(decoded)
+				}
+				i++
+			}
+
+			err := analyticsCollection.Insert(keys...)
+			if err != nil {
+				log.Error("Problem inserting to mongo collection")
+				log.Error(err)
+			} else {
+				m.Store.DeleteKeys(keyNames)
+			}
+		}
 	}
 }

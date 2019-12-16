@@ -13,7 +13,6 @@ import (
 
 /*
 TODO: Set configuration file (Command line)
-TODO: Analytics purge to disk / DB
 TODO: Make SessionLimiter an interface so we can have different limiter types (e.g. queued requests?)
 */
 
@@ -26,7 +25,6 @@ var systemError string = "{\"status\": \"system error, please contact administra
 var analytics = RedisAnalyticsHandler{}
 
 func displayConfig() {
-	// configColor := goterm.MAGENTA
 	configTable := goterm.NewTable(0, 10, 5, ' ', 0)
 	fmt.Fprintf(configTable, "Listening on port:\t%d\n", config.ListenPort)
 	fmt.Fprintf(configTable, "Source path:\t%s\n", config.ListenPath)
@@ -58,7 +56,7 @@ func setupGlobals() {
 		log.Info("Setting up analytics DB connection")
 		analytics = RedisAnalyticsHandler{
 			Store: &AnalyticsStore,
-			Clean: CSVPurger{&AnalyticsStore}}
+			Clean: &MongoPurger{&AnalyticsStore, nil}}
 
 		analytics.Store.Connect()
 		go analytics.Clean.StartPurgeLoop(config.AnalyticsConfig.PurgeDelay)
