@@ -83,6 +83,7 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseProxy) {
 	if config.EnableAnalytics {
 		t := time.Now()
+		keyName := r.Header.Get(config.AuthHeaderName)
 		thisRecord := AnalyticsRecord{
 			r.Method,
 			r.URL.Path,
@@ -93,7 +94,7 @@ func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseP
 			t.Year(),
 			t.Hour(),
 			200,
-		}
+			keyName}
 		analytics.RecordHit(thisRecord)
 	}
 
@@ -103,6 +104,7 @@ func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseP
 func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int) {
 	if config.EnableAnalytics {
 		t := time.Now()
+		keyName := r.Header.Get(config.AuthHeaderName)
 		thisRecord := AnalyticsRecord{
 			r.Method,
 			r.URL.Path,
@@ -112,8 +114,8 @@ func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int
 			t.Month(),
 			t.Year(),
 			t.Hour(),
-			200,
-		}
+			errCode,
+			keyName}
 		analytics.RecordHit(thisRecord)
 	}
 
