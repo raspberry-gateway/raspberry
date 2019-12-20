@@ -76,7 +76,7 @@ If you have API paths that do not require authorisation, describe thme here, the
 The configuration of how to store analytics. Two modes are supported for the `type` key: `csv` and `mongo`, selecting the `csv` type will cause Raspberry to purge the access data from Redis to disk (in the `csv_dir` directory - this must be an absolute path) at the rate specified by `purge_delay` (in seconds). The `mongo` type will store this data in a MongoDB instance of your chosing, ensure the details are correct in order to connect.
 
 Recommended Deployment
-==========================
+-----------------------
 
 It is our opinion that the safest way to set up Raspberry is behind another web server, as it should act as a part of your ingrastructure stack, and not be front-line. A typical setup would involve:
 
@@ -87,7 +87,7 @@ It is our opinion that the safest way to set up Raspberry is behind another web 
 Raspberry can be load-balanced the same way any other web server can, so you can have multiple instances running on different ports.
 
 Starting raspberry
-==================
+------------------
 
 Starting Raspberry is very simple:
 
