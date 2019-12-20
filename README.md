@@ -93,6 +93,6 @@ Starting raspberry
 
 Starting Raspberry is very simple:
 
-    lance@ubuntu:/lance$ ./raspberry --conf=raspberry.conf
+    > ./raspberry [--conf=raspberry.conf] [--port=PORT]
 
-The `--conf` flag is optional, Raspberry will create a configuration file if it can't find one.
+The `--conf` flag is optional, Raspberry will create a configuration file if it can't find one. Stating `--port` will override the port set in the configuration file.

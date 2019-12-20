@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 )
 
 /*
@@ -84,6 +85,7 @@ func init() {
 	Options:
 		-h --help	Show this screen
 		--conf=FILE	Load a named configuration file
+		--port=PORT Listen on PORT (overrides config file)
 
 	`
 
@@ -105,6 +107,17 @@ func init() {
 
 	loadConfig(filename, &config)
 	setupGlobals()
+
+	port, _ := arguments["--port"]
+	if port != nil {
+		portNum, err := strconv.Atoi(port.(string))
+		if err != nil {
+			log.Error("Port specified in flags must be a number!")
+			log.Error(err)
+		} else {
+			config.ListenPort = portNum
+		}
+	}
 }
 
 func intro() {
