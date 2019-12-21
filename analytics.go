@@ -58,7 +58,7 @@ func (r RedisAnalyticsHandler) RecordHit(thisRecord AnalyticsRecord) error {
 		log.Error(err)
 		return AnalyticsError{}
 	}
-	r.Store.SetKey(keyName, string(encoded))
+	r.Store.SetKey(keyName, string(encoded), 0)
 	return nil
 }
 
