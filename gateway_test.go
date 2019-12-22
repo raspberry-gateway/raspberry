@@ -76,7 +76,7 @@ func TestThrottling(t *testing.T) {
 		t.Error("Third request failed, should not be 200!:\n", third_recorder.Body.String())
 	}
 	if third_recorder.Code != 429 {
-		t.Error("Third request returned invalid code, should 429, got: \n", third_recorder.Code)
+		t.Error("Third request returned invalid code, should 409, got: \n", third_recorder.Code)
 	}
 
 	newApiError := RaspberryErrorResponse{}
@@ -119,7 +119,7 @@ func TestQuota(t *testing.T) {
 		t.Error("Third request failed, should be not 200!: \n", third_recorder.Code)
 	}
 	if third_recorder.Code != 429 {
-		t.Error("Third request returned invalid code, should 429, got: \n", third_recorder.Code)
+		t.Error("Third request returned invalid code, should 409, got: \n", third_recorder.Code)
 	}
 
 	newApiError := RaspberryErrorResponse{}
