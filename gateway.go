@@ -5,6 +5,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"net/http"
 	"net/http/httputil"
+	"runtime/pprof"
 	"strings"
 	"time"
 )
@@ -100,6 +101,9 @@ func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseP
 	}
 
 	p.ServeHTTP(w, r)
+	if doMemoryProfile {
+		pprof.WriteHeapProfile(prof_file)
+	}
 }
 
 func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int) {
@@ -126,4 +130,7 @@ func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int
 	w.Header().Add("x-Generator", "raspberry.io")
 	thisError := ApiError{fmt.Sprintf("%s", err)}
 	templates.ExecuteTemplate(w, "error.json", &thisError)
+	if doMemoryProfile {
+		pprof.WriteHeapProfile(prof_file)
+	}
 }

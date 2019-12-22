@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strconv"
 )
 
@@ -24,6 +25,8 @@ var config = Config{}
 var templates = &template.Template{}
 var systemError string = "{\"status\": \"system error, please contact administrator\"}"
 var analytics = RedisAnalyticsHandler{}
+var prof_file = &os.File{}
+var doMemoryProfile bool
 
 func displayConfig() {
 	configTable := goterm.NewTable(0, 10, 5, ' ', 0)
@@ -83,9 +86,10 @@ func init() {
 		raspberry [options]
 
 	Options:
-		-h --help	Show this screen
-		--conf=FILE	Load a named configuration file
-		--port=PORT Listen on PORT (overrides config file)
+		-h --help		Show this screen
+		--conf=FILE		Load a named configuration file
+		--port=PORT	 	Listen on PORT (overrides config file)
+		--memprofile 	Generate a memory profile
 
 	`
 
@@ -118,6 +122,9 @@ func init() {
 			config.ListenPort = portNum
 		}
 	}
+
+	doMemoryProfile, _ = arguments["--memprofile"].(bool)
+
 }
 
 func intro() {
@@ -130,6 +137,12 @@ func intro() {
 func main() {
 	intro()
 	displayConfig()
+
+	if doMemoryProfile {
+		log.Info("Memory profiling active")
+		prof_file, _ = os.Create("raspberry.mprof")
+		defer prof_file.Close()
+	}
 
 	remote, err := url.Parse(config.TargetUrl)
 	if err != nil {
