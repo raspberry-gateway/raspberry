@@ -2,30 +2,35 @@ package main
 
 import (
 	"fmt"
-	"github.com/Sirupsen/logrus"
 	"net/http"
 	"net/http/httputil"
 	"runtime/pprof"
-	"strings"
 	"time"
+
+	"github.com/Sirupsen/logrus"
 )
 
 type ApiError struct {
 	Message string
 }
 
-func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
+func handler(p *httputil.ReverseProxy, apiSpec ApiSpec) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		for _, sub := range config.ExcludePaths {
-			if strings.Contains(r.URL.Path, sub) {
-				successHandler(w, r, p)
-				return
-			}
+		// Check versioning, blacklist, whitelist and ignored status
+		requestValid, stat := apiSpec.IsRequestValid(r)
+		if requestValid == false {
+			handleError(w, r, string(stat), 409, apiSpec)
 		}
 
+		if stat == StatusOkAndIgnore {
+			successHandler(w, r, p, apiSpec)
+			return
+		}
+
+		// All is ok with the request itself, now auth and validate the rest
 		// Check for API key existence
-		authHeaderValue := r.Header.Get("authorisation")
+		authHeaderValue := r.Header.Get(apiSpec.ApiDefinition.Auth.AuthHeaderName)
 		if authHeaderValue != "" {
 			// Check if API key valid
 			keyAuthorised, thisSessionState := authManager.IsKeyAuthorised(authHeaderValue)
@@ -35,7 +40,7 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 					// If valid, check if within rate limit
 					forwardMessage, reason := sessionLimiter.ForwardMessage(&thisSessionState)
 					if forwardMessage {
-						successHandler(w, r, p)
+						successHandler(w, r, p, apiSpec)
 					} else {
 						if reason == 1 {
 							log.WithFields(logrus.Fields{
@@ -43,14 +48,14 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 								"origin": r.RemoteAddr,
 								"key":    authHeaderValue,
 							}).Info("rate limit exceeded.")
-							handleError(w, r, "Rate limit exceeded", 409)
+							handleError(w, r, "Rate limit exceeded", 409, apiSpec)
 						} else if reason == 2 {
 							log.WithFields(logrus.Fields{
 								"path":   r.URL.Path,
 								"origin": r.RemoteAddr,
 								"key":    authHeaderValue,
 							}).Info("Key quota limit exceeded.")
-							handleError(w, r, "quota exceeded", 409)
+							handleError(w, r, "quota exceeded", 409, apiSpec)
 						}
 					}
 					authManager.UpdateSession(authHeaderValue, thisSessionState)
@@ -60,7 +65,7 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 						"origin": r.RemoteAddr,
 						"key":    authHeaderValue,
 					}).Info("Attempted access from expired key.")
-					handleError(w, r, "Key has expired, please renew", 403)
+					handleError(w, r, "Key has expired, please renew", 403, apiSpec)
 				}
 			} else {
 				log.WithFields(logrus.Fields{
@@ -68,7 +73,7 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 					"origin": r.RemoteAddr,
 					"key":    authHeaderValue,
 				}).Info("Attempted access with non-existend key.")
-				handleError(w, r, "Key not authorised", 403)
+				handleError(w, r, "Key not authorised", 403, apiSpec)
 			}
 		} else {
 			log.WithFields(logrus.Fields{
@@ -76,15 +81,15 @@ func handler(p *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) 
 				"origin": r.RemoteAddr,
 				"key":    authHeaderValue,
 			}).Info("Attempted access with malformed header, no auth header found.")
-			handleError(w, r, "Authorisation field missing", 400)
+			handleError(w, r, "Authorisation field missing", 400, apiSpec)
 		}
 	}
 }
 
-func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseProxy) {
+func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseProxy, apiSpec ApiSpec) {
 	if config.EnableAnalytics {
 		t := time.Now()
-		keyName := r.Header.Get(config.AuthHeaderName)
+		keyName := r.Header.Get(apiSpec.ApiDefinition.Auth.AuthHeaderName)
 		thisRecord := AnalyticsRecord{
 			r.Method,
 			r.URL.Path,
@@ -106,10 +111,10 @@ func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseP
 	}
 }
 
-func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int) {
+func handleError(w http.ResponseWriter, r *http.Request, err string, errCode int, apiSpec ApiSpec) {
 	if config.EnableAnalytics {
 		t := time.Now()
-		keyName := r.Header.Get(config.AuthHeaderName)
+		keyName := r.Header.Get(apiSpec.ApiDefinition.Auth.AuthHeaderName)
 		thisRecord := AnalyticsRecord{
 			r.Method,
 			r.URL.Path,

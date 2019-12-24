@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/buger/goterm"
-	"github.com/docopt/docopt.go"
 	"html/template"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/Sirupsen/logrus"
+	"github.com/buger/goterm"
+	"github.com/docopt/docopt.go"
 )
 
 /*
@@ -31,8 +32,8 @@ var doMemoryProfile bool
 func displayConfig() {
 	configTable := goterm.NewTable(0, 10, 5, ' ', 0)
 	fmt.Fprintf(configTable, "Listening on port:\t%d\n", config.ListenPort)
-	fmt.Fprintf(configTable, "Source path:\t%s\n", config.ListenPath)
-	fmt.Fprintf(configTable, "Gateway target:\t%s\n", config.TargetUrl)
+	// fmt.Fprintf(configTable, "Source path:\t%s\n", config.ListenPath)
+	// fmt.Fprintf(configTable, "Gateway target:\t%s\n", config.TargetUrl)
 
 	fmt.Println(configTable)
 	fmt.Println("")
@@ -144,18 +145,25 @@ func main() {
 		defer prof_file.Close()
 	}
 
-	remote, err := url.Parse(config.TargetUrl)
-	if err != nil {
-		log.Error("Couldn't parse target URL")
-		log.Error(err)
+	http.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandelr))
+	http.HandleFunc("/raspberry/keys/", securityHandler(keyHander))
+
+	// load the API defs
+	thisApiLoader := ApiDefinitionLoader{}
+	ApiSpecs := thisApiLoader.LoadDefinitions("./apps/")
+	for _, spec := range ApiSpecs {
+		// Create a new handler for each API spec
+		remote, err := url.Parse(spec.ApiDefinition.Proxy.TargetUrl)
+		if err != nil {
+			log.Error("Couldn't parse target URL")
+			log.Error(err)
+		}
+		proxy := httputil.NewSingleHostReverseProxy(remote)
+		http.HandleFunc(spec.Proxy.ListenPath, handler(proxy, spec))
 	}
 
-	proxy := httputil.NewSingleHostReverseProxy(remote)
-	http.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandler))
-	http.HandleFunc("/raspberry/keys/", securityHandler(keyHandler))
-	http.HandleFunc(config.ListenPath, handler(proxy))
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
-	err = http.ListenAndServe(targetPort, nil)
+	err := http.ListenAndServe(targetPort, nil)
 	if err != nil {
 		log.Error(err)
 	}

@@ -257,7 +257,7 @@ func securityHandler(handler func(http.ResponseWriter, *http.Request)) func(http
 		if raspberryAuthKey != config.Secret {
 			// Error
 			log.Warning("Attempted administractive access with invalid or missing key!")
-			handleError(w, r, "Authorisation failed", 403)
+			handleError(w, r, "Authorisation failed", 403, ApiSpec{})
 		} else {
 			handler(w, r)
 		}
