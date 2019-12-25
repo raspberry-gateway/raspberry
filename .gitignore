@@ -17,3 +17,4 @@
 .vscode/
 logs/
 *.mprof
+apps/test.json

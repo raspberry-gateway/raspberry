@@ -6,17 +6,23 @@ import (
 	"time"
 )
 
+type AccessDefinition struct {
+	ApiName  string   `json:"api_name"`
+	Versions []string `json:"versions"`
+}
+
 // SessionState objects represent a current API session, mainly used for rate limiting.
 type SessionState struct {
-	LastCheck        int64   `json: "last_check"`
-	Allowance        float64 `json: "allowance"`
-	Rate             float64 `json: "rate"`
-	Per              float64 `json: "per"`
-	Expires          int64   `json: "expires"`
-	QuotaMax         int64   `json: "quota_max"`
-	QuotaRenews      int64   `json: "quota_renews"`
-	QuotaRemaining   int64   `json: "quota_remaining"`
-	QuotaRenewalRate int64   `json: "quota_renewal_rate"`
+	LastCheck        int64                       `json: "last_check"`
+	Allowance        float64                     `json: "allowance"`
+	Rate             float64                     `json: "rate"`
+	Per              float64                     `json: "per"`
+	Expires          int64                       `json: "expires"`
+	QuotaMax         int64                       `json: "quota_max"`
+	QuotaRenews      int64                       `json: "quota_renews"`
+	QuotaRemaining   int64                       `json: "quota_remaining"`
+	QuotaRenewalRate int64                       `json: "quota_renewal_rate"`
+	AccessRights     map[string]AccessDefinition `json: "access_rights"`
 }
 
 // SessionLimiter is the rate limiter for the API, use ForwardMessage() to
