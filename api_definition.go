@@ -21,8 +21,9 @@ type ApiDefinition struct {
 		Versions     map[string]VersionInfo `json:"versions"`
 	} `json:"version_data"`
 	Proxy struct {
-		ListenPath string `json:"listen_path"`
-		TargetUrl  string `json:"target_url"`
+		ListenPath      string `json:"listen_path"`
+		TargetUrl       string `json:"target_url"`
+		StripListenPath bool   `json:"strip_listen_path"`
 	} `json:"proxy"`
 	Auth struct {
 		AuthHeaderName string `json:"auth_header_name"`

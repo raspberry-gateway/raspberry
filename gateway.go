@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -79,6 +80,7 @@ func handler(p *httputil.ReverseProxy, apiSpec ApiSpec) func(http.ResponseWriter
 					if forwardMessage {
 						successHandler(w, r, p, apiSpec)
 					} else {
+						// TODO Use an Enum!
 						if reason == 1 {
 							log.WithFields(logrus.Fields{
 								"path":   r.URL.Path,
@@ -148,7 +150,12 @@ func successHandler(w http.ResponseWriter, r *http.Request, p *httputil.ReverseP
 		analytics.RecordHit(thisRecord)
 	}
 
+	if apiSpec.ApiDefinition.Proxy.StripListenPath {
+		r.URL.Path = strings.Replace(r.URL.Path, apiSpec.Proxy.ListenPath, "", 1)
+	}
+
 	p.ServeHTTP(w, r)
+
 	if doMemoryProfile {
 		pprof.WriteHeapProfile(prof_file)
 	}
