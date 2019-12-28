@@ -1,5 +1,6 @@
 {
     "name": "Raspberry Test API",
+    "org_id": "default",
     "definition": {
         "location": "header",
         "key": "version"
