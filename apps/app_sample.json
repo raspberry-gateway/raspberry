@@ -1,5 +1,6 @@
 {
     "name": "Raspberry Test API",
+    "api_id": "1",
     "org_id": "default",
     "definition": {
         "location": "header",
@@ -24,6 +25,6 @@
     },
     "proxy": {
         "listen_path": "/raspberry-api-test/",
-        "target_url": "http://raspberry.io/"
+        "target_url": "http://jive.ly"
     }
 }
