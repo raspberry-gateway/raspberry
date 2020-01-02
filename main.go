@@ -3,15 +3,18 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/buger/goterm"
 	"github.com/docopt/docopt.go"
+	"github.com/rcrowley/goagain"
 )
 
 /*
@@ -135,6 +138,23 @@ func intro() {
 	fmt.Print("Copyright Lance. @2019")
 }
 
+func loadApps() {
+	// load the API defs
+	log.Info("Loading API configurations.")
+	thisApiLoader := ApiDefinitionLoader{}
+	ApiSpec := thisApiLoader.LoadDefinitions("./apps/")
+	for _, spec := range ApiSpec {
+		// Create a new handler for each API spec
+		remote, err := url.Parse(spec.ApiDefinition.Proxy.TargetUrl)
+		if err != nil {
+			log.Error("Could not parse target URL")
+			log.Error(err)
+		}
+		proxy := httputil.NewSingleHostReverseProxy(remote)
+		http.HandleFunc(spec.Proxy.ListenPath, handler(proxy, spec))
+	}
+}
+
 func main() {
 	intro()
 	displayConfig()
@@ -148,23 +168,44 @@ func main() {
 	http.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandelr))
 	http.HandleFunc("/raspberry/keys/", securityHandler(keyHander))
 
-	// load the API defs
-	thisApiLoader := ApiDefinitionLoader{}
-	ApiSpecs := thisApiLoader.LoadDefinitions("./apps/")
-	for _, spec := range ApiSpecs {
-		// Create a new handler for each API spec
-		remote, err := url.Parse(spec.ApiDefinition.Proxy.TargetUrl)
-		if err != nil {
-			log.Error("Couldn't parse target URL")
-			log.Error(err)
+	targetPort := fmt.Sprintf(":%d", config.ListenPort)
+
+	// Handle reload when SIGUSR2 is received
+	l, err := goagain.Listener()
+	if nil != err {
+		// Listen on a TCP or a UNIX domain socket (TCP here).
+		l, err = net.Listen("tcp", targetPort)
+		if nil != err {
+			log.Fatalln("")
 		}
-		proxy := httputil.NewSingleHostReverseProxy(remote)
-		http.HandleFunc(spec.Proxy.ListenPath, handler(proxy, spec))
+		log.Println("Listening on ", l.Addr())
+
+		// Accept connections in a new goroutine
+		loadApps()
+		go http.Serve(l, nil)
+	} else {
+		// Resume accepting connextions in a new goroutine.
+		log.Panicln("Resuming listening on", l.Addr())
+		loadApps()
+		go http.Serve(l, nil)
+
+		// Kill the parent, now that the child has started successfully.
+		if err := goagain.Kill(); nil != err {
+			log.Fatalln(err)
+		}
 	}
 
-	targetPort := fmt.Sprintf(":%d", config.ListenPort)
-	err := http.ListenAndServe(targetPort, nil)
-	if err != nil {
-		log.Error(err)
+	// Block the main goroutine awaiting signals.
+	if _, err := goagain.Wait(l); nil != err {
+		log.Fatalln(err)
 	}
+
+	// Do whatever's necessary to ensure a graceful exit like waiting for
+	// goroutines to terminate or a channel to become closed.
+	//
+	// In this case, we'll simply stop listening and wait one second.
+	if err := l.Close(); nil != err {
+		log.Fatalln(err)
+	}
+	time.Sleep(1e9)
 }
