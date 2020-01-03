@@ -214,8 +214,8 @@ func loadApps(ApiSpecs []ApiSpec, Muxer *http.ServeMux) {
 		chain := alice.New(
 			VersionCheck{raspberryMiddleware}.New(),
 			KeyExists{raspberryMiddleware}.New(),
-			VersionCheck{raspberryMiddleware}.New(),
 			KeyExpired{raspberryMiddleware}.New(),
+			AccessRightsCheck{raspberryMiddleware}.New(),
 			RateLimitAndQuotaCheck{raspberryMiddleware}.New()).Then(myHandler)
 		Muxer.Handle(spec.Proxy.ListenPath, chain)
 	}
