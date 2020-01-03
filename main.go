@@ -136,19 +136,16 @@ func intro() {
 	fmt.Print("Copyright Lance. @2019")
 }
 
-func loadApiEndpoints() {
+func loadApiEndpoints(Muxer *http.ServeMux) {
 	// set up main API handlers
-	http.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandler))
-	http.HandleFunc("/raspberry/keys/", securityHandler(keyHandler))
-	http.HandleFunc("/raspberry/reload", securityHandler(resetHandler))
+	Muxer.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandler))
+	Muxer.HandleFunc("/raspberry/keys/", securityHandler(keyHandler))
+	Muxer.HandleFunc("/raspberry/reload", securityHandler(resetHandler))
 }
 
-func loadApps() {
-	// load the API defs
-	log.Info("Loading API configurations.")
-	thisApiLoader := ApiDefinitionLoader{}
-
+func getApiSpecs() []ApiSpec {
 	var ApiSpecs []ApiSpec
+	thisApiLoader := ApiDefinitionLoader{}
 
 	if config.UseDBAppConfigs {
 		log.Info("Using App Configuration from Mongo DB")
@@ -156,6 +153,13 @@ func loadApps() {
 	} else {
 		ApiSpecs = thisApiLoader.LoadDefinitions("./apps/")
 	}
+
+	return ApiSpecs
+}
+
+func loadApps(ApiSpecs []ApiSpec, Muxer *http.ServeMux) {
+	// load the API defs
+	log.Info("Loading API configurations.")
 
 	for _, spec := range ApiSpecs {
 		// Create a new handler for each API spec
@@ -166,8 +170,18 @@ func loadApps() {
 		}
 		log.Info(remote)
 		proxy := httputil.NewSingleHostReverseProxy(remote)
-		http.HandleFunc(spec.Proxy.ListenPath, handler(proxy, spec))
+		Muxer.HandleFunc(spec.Proxy.ListenPath, handler(proxy, spec))
 	}
+}
+
+func ReloadURLStructure() {
+	newMuxes := http.NewServeMux()
+	loadApiEndpoints(newMuxes)
+	specs := getApiSpecs()
+	loadApps(specs, newMuxes)
+
+	http.DefaultServeMux = newMuxes
+	log.Info("Reload complete")
 }
 
 func main() {
@@ -181,7 +195,7 @@ func main() {
 	}
 
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
-	loadApiEndpoints()
+	loadApiEndpoints(http.DefaultServeMux)
 
 	// Handle reload when SIGUSR2 is received
 	l, err := goagain.Listener()
@@ -194,12 +208,14 @@ func main() {
 		log.Println("Listening on ", l.Addr())
 
 		// Accept connections in a new goroutine
-		loadApps()
+		specs := getApiSpecs()
+		loadApps(specs, http.DefaultServeMux)
 		go http.Serve(l, nil)
 	} else {
 		// Resume accepting connextions in a new goroutine.
 		log.Panicln("Resuming listening on", l.Addr())
-		loadApps()
+		specs := getApiSpecs()
+		loadApps(specs, http.DefaultServeMux)
 		go http.Serve(l, nil)
 
 		// Kill the parent, now that the child has started successfully.
