@@ -136,6 +136,13 @@ func intro() {
 	fmt.Print("Copyright Lance. @2019")
 }
 
+func loadApiEndpoints() {
+	// set up main API handlers
+	http.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandler))
+	http.HandleFunc("/raspberry/keys/", securityHandler(keyHandler))
+	http.HandleFunc("/raspberry/reload", securityHandler(resetHandler))
+}
+
 func loadApps() {
 	// load the API defs
 	log.Info("Loading API configurations.")
@@ -173,10 +180,8 @@ func main() {
 		defer prof_file.Close()
 	}
 
-	http.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandelr))
-	http.HandleFunc("/raspberry/keys/", securityHandler(keyHander))
-
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
+	loadApiEndpoints()
 
 	// Handle reload when SIGUSR2 is received
 	l, err := goagain.Listener()

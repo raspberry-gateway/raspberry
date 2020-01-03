@@ -165,6 +165,21 @@ func keyHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(responseMessage))
 }
 
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	var responseMessage []byte
+	var code int
+
+	if r.Method == "GET" {
+		responseMessage, code = handleURLReload()
+	} else {
+		// Return Not supported message (and code)
+		code = 405
+		responseMessage = createError("Method not supported")
+	}
+	w.WriteHeader(code)
+	fmt.Fprintf(w, string(responseMessage))
+}
+
 func expandKey(orgId, key string) string {
 	if orgId == "" {
 		return fmt.Sprintf("%s", key)
@@ -267,6 +282,28 @@ func handleDeleteKey(keyName string) ([]byte, int) {
 		}).Info("Attempted key deletion - success.")
 		return responseMessage, code
 	}
+}
+
+func handleURLReload() ([]byte, int) {
+	var responseMessage []byte
+	var err error
+
+	ReloadURLStructure()
+
+	code := 200
+
+	statusObj := ApiErrorMessage{"ok", ""}
+	responseMessage, err = json.Marshal(&statusObj)
+
+	if err != nil {
+		log.Error("Marshalling failed")
+		log.Error(err)
+		return []byte(systemError), 500
+	} else {
+		log.WithFields(logrus.Fields{}).Info("Reload URL Structure - Success")
+	}
+
+	return responseMessage, code
 }
 
 func securityHandler(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
