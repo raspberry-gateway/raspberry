@@ -208,7 +208,7 @@ func loadApps(ApiSpecs []ApiSpec, Muxer *http.ServeMux) {
 		log.Info(remote)
 		proxy := httputil.NewSingleHostReverseProxy(remote)
 
-		myHandler := http.HandlerFunc(handler(proxy, spec))
+		proxyHandler := http.HandlerFunc(ProxyHandler(proxy, spec))
 		raspberryMiddleware := RaspberryMiddleware{spec, proxy}
 
 		chain := alice.New(
@@ -216,7 +216,7 @@ func loadApps(ApiSpecs []ApiSpec, Muxer *http.ServeMux) {
 			KeyExists{raspberryMiddleware}.New(),
 			KeyExpired{raspberryMiddleware}.New(),
 			AccessRightsCheck{raspberryMiddleware}.New(),
-			RateLimitAndQuotaCheck{raspberryMiddleware}.New()).Then(myHandler)
+			RateLimitAndQuotaCheck{raspberryMiddleware}.New()).Then(proxyHandler)
 		Muxer.Handle(spec.Proxy.ListenPath, chain)
 	}
 }
