@@ -14,6 +14,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/buger/goterm"
 	"github.com/docopt/docopt.go"
+	"github.com/justinas/alice"
 	"github.com/rcrowley/goagain"
 )
 
@@ -134,6 +135,7 @@ func intro() {
 	fmt.Println(goterm.Bold(goterm.Color("Raspberry.io Gateway API v0.1", goterm.GREEN)))
 	fmt.Println(goterm.Bold(goterm.Color("=============================", goterm.GREEN)))
 	fmt.Print("Copyright Lance. @2019")
+	fmt.Print("\nhttp://www.respberry.io\n\n")
 }
 
 func loadApiEndpoints(Muxer *http.ServeMux) {
@@ -157,6 +159,41 @@ func getApiSpecs() []ApiSpec {
 	return ApiSpecs
 }
 
+func customHandler1(h http.Handler) http.Handler {
+	thisHandler := func(w http.ResponseWriter, r *http.Request) {
+		log.Info("Middleware 1 called!")
+		h.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(thisHandler)
+}
+
+func customHandler2(h http.Handler) http.Handler {
+	thisHandler := func(w http.ResponseWriter, r *http.Request) {
+		log.Info("Middleware 2 called!")
+		h.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(thisHandler)
+}
+
+type StructMiddleware struct {
+	spec ApiSpec
+}
+
+func (s StructMiddleware) New(spec ApiSpec) func(http.Handler) http.Handler {
+	aliceHandler := func(h http.Handler) http.Handler {
+		thisHandler := func(w http.ResponseWriter, r *http.Request) {
+			log.Info("Middleware 3 called!")
+			log.Info(spec.ApiId)
+			h.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(thisHandler)
+	}
+
+	return aliceHandler
+}
+
 func loadApps(ApiSpecs []ApiSpec, Muxer *http.ServeMux) {
 	// load the API defs
 	log.Info("Loading API configurations.")
@@ -170,7 +207,17 @@ func loadApps(ApiSpecs []ApiSpec, Muxer *http.ServeMux) {
 		}
 		log.Info(remote)
 		proxy := httputil.NewSingleHostReverseProxy(remote)
-		Muxer.HandleFunc(spec.Proxy.ListenPath, handler(proxy, spec))
+
+		myHandler := http.HandlerFunc(handler(proxy, spec))
+		raspberryMiddleware := RaspberryMiddleware{spec, proxy}
+
+		chain := alice.New(
+			VersionCheck{raspberryMiddleware}.New(),
+			KeyExists{raspberryMiddleware}.New(),
+			VersionCheck{raspberryMiddleware}.New(),
+			KeyExpired{raspberryMiddleware}.New(),
+			RateLimitAndQuotaCheck{raspberryMiddleware}.New()).Then(myHandler)
+		Muxer.Handle(spec.Proxy.ListenPath, chain)
 	}
 }
 
