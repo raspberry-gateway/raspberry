@@ -53,15 +53,19 @@ func (s InMemoryStorageManager) SetKey(keyName string, sessionState string, time
 	s.Sessions[keyName] = sessionState
 }
 
+// GetKeys will retreive multiple keys based on a filter (prefix, e.g. raspberry.keys)
 func (s InMemoryStorageManager) GetKeys(filter string) []string {
 	sessions := make([]string, 0, len(s.Sessions))
-	for key, _ := range s.Sessions {
-		sessions = append(sessions, key)
+	for key := range s.Sessions {
+		if strings.Contains(key, filter) {
+			sessions = append(sessions, key)
+		}
 	}
 
 	return sessions
 }
 
+// GetKeysAndValues returns all keys and their data, very expensive call.
 func (s InMemoryStorageManager) GetKeysAndValues() map[string]string {
 	return s.Sessions
 }
@@ -72,7 +76,7 @@ func (s InMemoryStorageManager) DeleteKey(keyName string) bool {
 	return true
 }
 
-// DeleteKeys WillBulk remove keys from session DB
+// DeleteKeys remove keys from session DB
 func (s InMemoryStorageManager) DeleteKeys(keys []string) bool {
 	for _, keyName := range keys {
 		delete(s.Sessions, keyName)
@@ -110,6 +114,7 @@ func (r *RedisStorageManager) newPool(server, password string) *redis.Pool {
 	}
 }
 
+// Connect will establish a connection to the DB
 func (r *RedisStorageManager) Connect() bool {
 	fullPath := config.Storage.Host + ":" + strconv.Itoa(config.Storage.Port)
 	log.Info("Connecting to redis on: ", fullPath)
@@ -127,24 +132,27 @@ func (r *RedisStorageManager) cleanKey(keyName string) string {
 	return setKeyName
 }
 
+// GetKey will retreive a key from the database
 func (r *RedisStorageManager) GetKey(keyName string) (string, error) {
 	db := r.pool.Get()
 	defer db.Close()
 	if db == nil {
 		r.Connect()
 		return r.GetKey(keyName)
-	} else {
-		value, err := redis.String(db.Do("GET", r.fixKey(keyName)))
-		if err != nil {
-			log.Error("Error trying to get value:")
-			log.Error(err)
-		} else {
-			return value, nil
-		}
 	}
+
+	value, err := redis.String(db.Do("GET", r.fixKey(keyName)))
+	if err != nil {
+		log.Error("Error trying to get value:")
+		log.Error(err)
+	} else {
+		return value, nil
+	}
+
 	return "", KeyError{}
 }
 
+// SetKey will create (or update) a key value in the store
 func (r *RedisStorageManager) SetKey(keyName string, sessionState string, timeout int64) {
 	db := r.pool.Get()
 	defer db.Close()
@@ -154,10 +162,10 @@ func (r *RedisStorageManager) SetKey(keyName string, sessionState string, timeou
 	} else {
 		_, err := db.Do("SET", r.fixKey(keyName), sessionState)
 		if timeout > 0 {
-			_, exp_err := db.Do("EXPIRE", r.fixKey(keyName), sessionState)
-			if exp_err != nil {
+			_, expErr := db.Do("EXPIRE", r.fixKey(keyName), sessionState)
+			if expErr != nil {
 				log.Error("Could not EXPIRE key")
-				log.Error(exp_err)
+				log.Error(expErr)
 			}
 		}
 		if err != nil {
@@ -167,29 +175,32 @@ func (r *RedisStorageManager) SetKey(keyName string, sessionState string, timeou
 	}
 }
 
+// GetKeys will return all keys according to the filter (filter is a prefix - e.g. raspberry.keys.*)
 func (r *RedisStorageManager) GetKeys(filter string) []string {
 	db := r.pool.Get()
 	defer db.Close()
 	if db == nil {
 		r.Connect()
 		return r.GetKeys(filter)
-	} else {
-		searchStr := r.KeyPrefix + filter + "*"
-		sessionInterface, err := db.Do("KEYS", searchStr)
-		if err != nil {
-			log.Error("Error trying to get all keys:")
-			log.Error(err)
-		} else {
-			sessions, _ := redis.Strings(sessionInterface, err)
-			for i, v := range sessions {
-				sessions[i] = r.cleanKey(v)
-			}
-			return sessions
-		}
 	}
+
+	searchStr := r.KeyPrefix + filter + "*"
+	sessionInterface, err := db.Do("KEYS", searchStr)
+	if err != nil {
+		log.Error("Error trying to get all keys:")
+		log.Error(err)
+	} else {
+		sessions, _ := redis.Strings(sessionInterface, err)
+		for i, v := range sessions {
+			sessions[i] = r.cleanKey(v)
+		}
+		return sessions
+	}
+
 	return []string{}
 }
 
+// GetKeysAndValues will return all keys and their values - not to be used lightly
 func (r RedisStorageManager) GetKeysAndValues() map[string]string {
 	db := r.pool.Get()
 	defer db.Close()
@@ -211,27 +222,32 @@ func (r RedisStorageManager) GetKeysAndValues() map[string]string {
 		for i, v := range keys {
 			returnValues[r.cleanKey(v)] = values[i]
 		}
+
 		return returnValues
 	}
+
 	return map[string]string{}
 }
 
+// DeleteKey will remove a key from the database
 func (r *RedisStorageManager) DeleteKey(keyName string) bool {
 	db := r.pool.Get()
 	defer db.Close()
 	if db == nil {
 		r.Connect()
 		return r.DeleteKey(keyName)
-	} else {
-		_, err := db.Do("DEL", r.fixKey(keyName))
-		if err != nil {
-			log.Error("Error trying to delete key:")
-			log.Error(err)
-		}
 	}
+
+	_, err := db.Do("DEL", r.fixKey(keyName))
+	if err != nil {
+		log.Error("Error trying to delete key:")
+		log.Error(err)
+	}
+
 	return true
 }
 
+// DeleteKeys will remove a group of keys in bulk
 func (r RedisStorageManager) DeleteKeys(keys []string) bool {
 	db := r.pool.Get()
 	defer db.Close()
