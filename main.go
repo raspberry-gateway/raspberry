@@ -28,9 +28,10 @@ var authManager = AuthorisationManager{}
 var config = Config{}
 var templates = &template.Template{}
 var analytics = RedisAnalyticsHandler{}
-var prof_file = &os.File{}
+var profileFile = &os.File{}
 var doMemoryProfile bool
 
+// Generic system error
 const (
 	E_SYSTEM_ERROR string = "{\"status\": \"system error, please contact administrator\"}"
 )
@@ -140,7 +141,7 @@ func intro() {
 	fmt.Print("\nhttp://www.respberry.io\n\n")
 }
 
-func loadApiEndpoints(Muxer *http.ServeMux) {
+func loadAPIEndpoints(Muxer *http.ServeMux) {
 	// set up main API handlers
 	Muxer.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandler))
 	Muxer.HandleFunc("/raspberry/keys/", securityHandler(keyHandler))
@@ -159,41 +160,6 @@ func getAPISpecs() []APISpec {
 	}
 
 	return APISpecs
-}
-
-func customHandler1(h http.Handler) http.Handler {
-	thisHandler := func(w http.ResponseWriter, r *http.Request) {
-		log.Info("Middleware 1 called!")
-		h.ServeHTTP(w, r)
-	}
-
-	return http.HandlerFunc(thisHandler)
-}
-
-func customHandler2(h http.Handler) http.Handler {
-	thisHandler := func(w http.ResponseWriter, r *http.Request) {
-		log.Info("Middleware 2 called!")
-		h.ServeHTTP(w, r)
-	}
-
-	return http.HandlerFunc(thisHandler)
-}
-
-type StructMiddleware struct {
-	spec APISpec
-}
-
-func (s StructMiddleware) New(spec APISpec) func(http.Handler) http.Handler {
-	aliceHandler := func(h http.Handler) http.Handler {
-		thisHandler := func(w http.ResponseWriter, r *http.Request) {
-			log.Info("Middleware 3 called!")
-			log.Info(spec.APIID)
-			h.ServeHTTP(w, r)
-		}
-		return http.HandlerFunc(thisHandler)
-	}
-
-	return aliceHandler
 }
 
 func loadApps(APISpecs []APISpec, Muxer *http.ServeMux) {
@@ -223,9 +189,12 @@ func loadApps(APISpecs []APISpec, Muxer *http.ServeMux) {
 	}
 }
 
+// ReloadURLStructure will create a new muxer, reload all the app configs for an
+// instance and then replace the DefaultServeMux with the new one, this enables a
+// reconfiguration to take place without stopping and requests from being handled.
 func ReloadURLStructure() {
 	newMuxes := http.NewServeMux()
-	loadApiEndpoints(newMuxes)
+	loadAPIEndpoints(newMuxes)
 	specs := getAPISpecs()
 	loadApps(specs, newMuxes)
 
@@ -239,12 +208,12 @@ func main() {
 
 	if doMemoryProfile {
 		log.Info("Memory profiling active")
-		prof_file, _ = os.Create("raspberry.mprof")
-		defer prof_file.Close()
+		profileFile, _ = os.Create("raspberry.mprof")
+		defer profileFile.Close()
 	}
 
 	targetPort := fmt.Sprintf(":%d", config.ListenPort)
-	loadApiEndpoints(http.DefaultServeMux)
+	loadAPIEndpoints(http.DefaultServeMux)
 
 	// Handle reload when SIGUSR2 is received
 	l, err := goagain.Listener()
