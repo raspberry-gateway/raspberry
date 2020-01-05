@@ -22,21 +22,23 @@ type AuthorisationManager struct {
 
 // IsKeyAuthorised checks if key exists and can be read into a SessionState object
 func (b AuthorisationManager) IsKeyAuthorised(keyName string) (bool, SessionState) {
-	jsonKeyVal, err := b.Store.GetKey(keyName)
+	jsonKeyVal, marshalErr := b.Store.GetKey(keyName)
 	var newSession SessionState
-	if err != nil {
+	if marshalErr != nil {
 		log.Warning("Invalid key detected, not found in storage engine")
 		return false, newSession
 	}
-	err = json.Unmarshal([]byte(jsonKeyVal), &newSession)
-	if err != nil {
+
+	if marshalErr = json.Unmarshal([]byte(jsonKeyVal), &newSession); marshalErr != nil {
 		log.Error("Couldn't unmarshal session object")
-		log.Error(err)
+		log.Error(marshalErr)
 		return false, newSession
 	}
+
 	return true, newSession
 }
 
+// IsKeyExpired checks if a key has expired, if the value of SessionState.Expires is 0, it will be ignored
 func (b AuthorisationManager) IsKeyExpired(newSession *SessionState) bool {
 	if newSession.Expires >= 1 {
 		diff := newSession.Expires - time.Now().Unix()
@@ -51,26 +53,28 @@ func (b AuthorisationManager) IsKeyExpired(newSession *SessionState) bool {
 // UpdateSession updates the session in the storage engine
 func (b AuthorisationManager) UpdateSession(keyName string, session SessionState) {
 	v, _ := json.Marshal(session)
-	key_exp := (session.Expires - time.Now().Unix()) + 300 // Add 5 minutes to key expiry, just in case
-	b.Store.SetKey(keyName, string(v), key_exp)
+	keyExp := (session.Expires - time.Now().Unix()) + 300 // Add 5 minutes to key expiry, just in case
+	b.Store.SetKey(keyName, string(v), keyExp)
 }
 
+// GetSessionDetail returns the session detail using the storage engine (either in memory or Redis)
 func (b AuthorisationManager) GetSessionDetail(keyName string) (SessionState, bool) {
-	jsonKeyVal, err := b.Store.GetKey(keyName)
+	jsonKeyVal, marshalErr := b.Store.GetKey(keyName)
 	var newSession SessionState
-	if err != nil {
+	if marshalErr != nil {
 		log.Warning("key does not exist")
 		return newSession, false
 	}
-	err = json.Unmarshal([]byte(jsonKeyVal), &newSession)
-	if err != nil {
+
+	if marshalErr = json.Unmarshal([]byte(jsonKeyVal), &newSession); marshalErr != nil {
 		log.Error("Couldn't unmarshal session object")
-		log.Error(err)
+		log.Error(marshalErr)
 		return newSession, false
 	}
 	return newSession, true
 }
 
+// GetSessions returns all sessions in the key store that match a filter key (a prefix)
 func (b AuthorisationManager) GetSessions(filter string) []string {
 	return b.Store.GetKeys(filter)
 }
