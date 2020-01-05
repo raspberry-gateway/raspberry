@@ -25,13 +25,15 @@ TODO: Make SessionLimiter an interface so we can have different limiter types (e
 
 var log = logrus.New()
 var authManager = AuthorisationManager{}
-var sessionLimiter = SessionLimiter{}
 var config = Config{}
 var templates = &template.Template{}
-var systemError string = "{\"status\": \"system error, please contact administrator\"}"
 var analytics = RedisAnalyticsHandler{}
 var prof_file = &os.File{}
 var doMemoryProfile bool
+
+const (
+	E_SYSTEM_ERROR string = "{\"status\": \"system error, please contact administrator\"}"
+)
 
 func displayConfig() {
 	configTable := goterm.NewTable(0, 10, 5, ' ', 0)

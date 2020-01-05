@@ -44,7 +44,7 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 		err := decoder.Decode(&newSession)
 
 		if err != nil {
-			responseMessage = []byte(systemError)
+			responseMessage = []byte(E_SYSTEM_ERROR)
 			code = 500
 			log.Error("Couldn't decode body")
 			log.Error(err)
@@ -70,7 +70,7 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					log.Error("Marshaling failed")
 					log.Error(err)
-					responseMessage = []byte(systemError)
+					responseMessage = []byte(E_SYSTEM_ERROR)
 					code = 500
 				} else {
 					log.WithFields(logrus.Fields{
@@ -129,7 +129,7 @@ func handleAddOrUpdate(keyName string, r *http.Request) ([]byte, int) {
 			log.Error("Could not create response message")
 			log.Error(err)
 			code = 500
-			responseMessage = []byte(systemError)
+			responseMessage = []byte(E_SYSTEM_ERROR)
 		}
 	}
 
@@ -258,7 +258,7 @@ func handleGetAllKeys(filter string) ([]byte, int) {
 		return responseMessage, code
 	} else {
 		log.Info("Attempted keys retrieval - success.")
-		return []byte(systemError), code
+		return []byte(E_SYSTEM_ERROR), code
 	}
 }
 
@@ -275,7 +275,7 @@ func handleDeleteKey(keyName string) ([]byte, int) {
 		log.Error("Marshaling falied")
 		log.Error(err)
 		code = 500
-		return []byte(systemError), code
+		return []byte(E_SYSTEM_ERROR), code
 	} else {
 		log.WithFields(logrus.Fields{
 			"key": keyName,
@@ -298,7 +298,7 @@ func handleURLReload() ([]byte, int) {
 	if err != nil {
 		log.Error("Marshalling failed")
 		log.Error(err)
-		return []byte(systemError), 500
+		return []byte(E_SYSTEM_ERROR), 500
 	} else {
 		log.WithFields(logrus.Fields{}).Info("Reload URL Structure - Success")
 	}
