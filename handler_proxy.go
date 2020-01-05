@@ -5,18 +5,14 @@ import (
 	"net/http/httputil"
 )
 
-type ApiError struct {
-	Message string
-}
-
-// ProxyHandler Proxies request onwards
+// ProxyHandler Proxies requests through to their final destination, if they make it through the middleware chain.
 func ProxyHandler(p *httputil.ReverseProxy, apiSpec APISpec) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		tm := RaspberryMiddleware{apiSpec, p}
 		handler := SuccessHandler{tm}
 		// Skip all other execution
-		handler.ServeHttp(w, r)
+		handler.ServeHTTP(w, r)
 		return
 	}
 }

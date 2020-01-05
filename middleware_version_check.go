@@ -24,7 +24,7 @@ func (s VersionCheck) New() func(http.Handler) http.Handler {
 			if stat == StatusOkAndIgnore {
 				handler := SuccessHandler{s.RaspberryMiddleware}
 				// Skip all other execution
-				handler.ServeHttp(w, r)
+				handler.ServeHTTP(w, r)
 				return
 			}
 
