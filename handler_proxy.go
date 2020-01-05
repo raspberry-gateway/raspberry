@@ -9,8 +9,8 @@ type ApiError struct {
 	Message string
 }
 
-// proxies request onwards
-func ProxyHandler(p *httputil.ReverseProxy, apiSpec ApiSpec) func(http.ResponseWriter, *http.Request) {
+// ProxyHandler Proxies request onwards
+func ProxyHandler(p *httputil.ReverseProxy, apiSpec APISpec) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		tm := RaspberryMiddleware{apiSpec, p}

@@ -18,7 +18,7 @@ const (
 )
 
 type RaspberryMiddleware struct {
-	Spec  ApiSpec
+	Spec  APISpec
 	Proxy *httputil.ReverseProxy
 }
 
@@ -29,13 +29,13 @@ type SuccessHandler struct {
 func (s SuccessHandler) ServeHttp(w http.ResponseWriter, r *http.Request) {
 	if config.EnableAnalytics {
 		t := time.Now()
-		keyName := r.Header.Get(s.Spec.ApiDefinition.Auth.AuthHeaderName)
+		keyName := r.Header.Get(s.Spec.APIDefinition.Auth.AuthHeaderName)
 		version := s.Spec.getVersionFromRequest(r)
 		if version == "" {
 			version = "Non Versioned"
 		}
 
-		if s.Spec.ApiDefinition.Proxy.StripListenPath {
+		if s.Spec.APIDefinition.Proxy.StripListenPath {
 			r.URL.Path = strings.Replace(r.URL.Path, s.Spec.Proxy.ListenPath, "", 1)
 		}
 
@@ -52,9 +52,9 @@ func (s SuccessHandler) ServeHttp(w http.ResponseWriter, r *http.Request) {
 			keyName,
 			t,
 			version,
-			s.Spec.ApiDefinition.Name,
-			s.Spec.ApiDefinition.ApiId,
-			s.Spec.OrgId}
+			s.Spec.APIDefinition.Name,
+			s.Spec.APIDefinition.APIID,
+			s.Spec.APIDefinition.OrgID}
 		analytics.RecordHit(thisRecord)
 	}
 

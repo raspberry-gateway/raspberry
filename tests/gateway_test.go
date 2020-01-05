@@ -44,11 +44,11 @@ type RaspberryErrorResponse struct {
 	Error string
 }
 
-func createNonVersionDefinition() ApiSpec {
-	var thisDef = ApiDefinition{}
+func createNonVersionDefinition() APISpec {
+	var thisDef = APIDefinition{}
 	var v1 = VersionInfo{}
-	var thisSpec = ApiSpec{}
-	var thisLoader = ApiDefinitionLoader{}
+	var thisSpec = APISpec{}
+	var thisLoader = APIDefinitionLoader{}
 
 	thisDef.Name = "Test API"
 	thisDef.VersionDefinition.Key = "version"
@@ -68,7 +68,7 @@ func createNonVersionDefinition() ApiSpec {
 
 	thisSpec.ApiDefinition = thisDef
 
-	thisSpec.RxPaths = make(map[string][]UrlSpec)
+	thisSpec.RxPaths = make(map[string][]URLSpec)
 	thisSpec.WhiteListEnabled = make(map[string]bool)
 
 	pathSpecs, whiteListSpecs := thisLoader.getPathSpecs(v1)
