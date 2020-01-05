@@ -10,15 +10,17 @@ import (
 	uuid "github.com/nu7hatch/gouuid"
 )
 
-type ApiModifyKeySuccess struct {
-	Key    string `json: "key"`
-	Status string `json: "status"`
-	Action string `json: "action"`
+// APIModifyKeySuccess represents when a Key modification was successful
+type APIModifyKeySuccess struct {
+	Key    string `json:"key"`
+	Status string `json:"status"`
+	Action string `json:"action"`
 }
 
+// ApiErrorMessage is an object that defines when a generic error occurred
 type ApiErrorMessage struct {
-	Status string `json: "status"`
-	Error  string `josn: "error"`
+	Status string `json:"status"`
+	Error  string `josn:"error"`
 }
 
 func createError(errorMsg string) []byte {
@@ -36,7 +38,7 @@ func createError(errorMsg string) []byte {
 func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 	var responseMessage []byte
 	code := 200
-	var responseObj = ApiModifyKeySuccess{}
+	var responseObj = APIModifyKeySuccess{}
 
 	if r.Method == "POST" {
 		decoder := json.NewDecoder(r.Body)
@@ -51,7 +53,7 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			u5, err := uuid.NewV4()
 			cleanString := strings.Replace(u5.String(), "-", "", -1)
-			new_key := expandKey(newSession.OrgId, cleanString)
+			newKey := expandKey(newSession.OrgID, cleanString)
 
 			if err != nil {
 				code = 400
@@ -59,7 +61,7 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 				log.Error(err)
 				responseMessage = createError("Request malformed")
 			} else {
-				keyName := new_key
+				keyName := newKey
 				authManager.UpdateSession(keyName, newSession)
 				responseObj.Action = "create"
 				responseObj.Key = keyName
@@ -118,7 +120,7 @@ func handleAddOrUpdate(keyName string, r *http.Request) ([]byte, int) {
 	}
 
 	if success {
-		response := ApiModifyKeySuccess{
+		response := APIModifyKeySuccess{
 			keyName,
 			"ok",
 			action}
@@ -194,9 +196,10 @@ func extractKey(orgId, key string) string {
 	return replaced
 }
 
+// APIStatusMessage represents an API status message
 type APIStatusMessage struct {
-	Status  string `json: "status"`
-	Message string `json: "message"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }
 
 func handleGetDetail(sessionKey string) ([]byte, int) {
@@ -232,8 +235,9 @@ func handleGetDetail(sessionKey string) ([]byte, int) {
 	return responseMessage, code
 }
 
+// APIAllKeys represents a list of keys in the memory store
 type APIAllKeys struct {
-	ApiKeys []string `json: "api_keys"`
+	ApiKeys []string `json:"api_keys"`
 }
 
 func handleGetAllKeys(filter string) ([]byte, int) {
@@ -268,7 +272,7 @@ func handleDeleteKey(keyName string) ([]byte, int) {
 	authManager.Store.DeleteKey(keyName)
 	code := 200
 
-	statusObj := ApiModifyKeySuccess{keyName, "ok", "deleted"}
+	statusObj := APIModifyKeySuccess{keyName, "ok", "deleted"}
 	responseMessage, err = json.Marshal(&statusObj)
 
 	if err != nil {
