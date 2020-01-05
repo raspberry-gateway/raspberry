@@ -34,6 +34,11 @@ func (s SuccessHandler) ServeHttp(w http.ResponseWriter, r *http.Request) {
 		if version == "" {
 			version = "Non Versioned"
 		}
+
+		if s.Spec.ApiDefinition.Proxy.StripListenPath {
+			r.URL.Path = strings.Replace(r.URL.Path, s.Spec.Proxy.ListenPath, "", 1)
+		}
+
 		thisRecord := AnalyticsRecord{
 			r.Method,
 			r.URL.Path,
@@ -51,10 +56,6 @@ func (s SuccessHandler) ServeHttp(w http.ResponseWriter, r *http.Request) {
 			s.Spec.ApiDefinition.ApiId,
 			s.Spec.OrgId}
 		analytics.RecordHit(thisRecord)
-	}
-
-	if s.Spec.ApiDefinition.Proxy.StripListenPath {
-		r.URL.Path = strings.Replace(r.URL.Path, s.Spec.Proxy.ListenPath, "", 1)
 	}
 
 	s.Proxy.ServeHTTP(w, r)

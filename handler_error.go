@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/context"
 	"net/http"
 	"runtime/pprof"
+	"strings"
 	"time"
 )
 
@@ -20,6 +21,11 @@ func (e ErrorHandler) HandleError(w http.ResponseWriter, r *http.Request, err st
 		if version == "" {
 			version = "Non Versioned"
 		}
+
+		if e.RaspberryMiddleware.Spec.ApiDefinition.Proxy.StripListenPath {
+			r.URL.Path = strings.Replace(r.URL.Path, e.Spec.Proxy.ListenPath, "", 1)
+		}
+
 		thisRecord := AnalyticsRecord{
 			r.Method,
 			r.URL.Path,
