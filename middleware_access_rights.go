@@ -6,10 +6,14 @@ import (
 	"net/http"
 )
 
+// AccessRightsCheck is a middleware that will check if the key being used to access the API has
+// permission to access the specific version. If no permission data is in the SessionState, then
+// it is assumed that the user can go through
 type AccessRightsCheck struct {
 	RaspberryMiddleware
 }
 
+// New creates a new HttpHandler for the alice middleware package
 func (a AccessRightsCheck) New() func(http.Handler) http.Handler {
 	aliceHandler := func(h http.Handler) http.Handler {
 		thisHandler := func(w http.ResponseWriter, r *http.Request) {
