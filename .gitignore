@@ -16,5 +16,6 @@
 
 .vscode/
 logs/
+lint_results.txt
 *.mprof
 apps/test.json
