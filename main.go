@@ -143,9 +143,9 @@ func intro() {
 
 func loadAPIEndpoints(Muxer *http.ServeMux) {
 	// set up main API handlers
-	Muxer.HandleFunc("/raspberry/keys/create", securityHandler(createKeyHandler))
-	Muxer.HandleFunc("/raspberry/keys/", securityHandler(keyHandler))
-	Muxer.HandleFunc("/raspberry/reload", securityHandler(resetHandler))
+	Muxer.HandleFunc("/raspberry/keys/create", CheckIsAPIOwner(createKeyHandler))
+	Muxer.HandleFunc("/raspberry/keys/", CheckIsAPIOwner(keyHandler))
+	Muxer.HandleFunc("/raspberry/reload", CheckIsAPIOwner(resetHandler))
 }
 
 func getAPISpecs() []APISpec {

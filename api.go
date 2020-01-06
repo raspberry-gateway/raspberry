@@ -308,21 +308,3 @@ func handleURLReload() ([]byte, int) {
 	log.WithFields(logrus.Fields{}).Info("Reload URL Structure - Success")
 	return responseMessage, code
 }
-
-func securityHandler(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		raspberryAuthKey := r.Header.Get("X-Raspberry-Authorisation")
-		if raspberryAuthKey != config.Secret {
-			// Error
-			log.Warning("Attempted administractive access with invalid or missing key!")
-
-			responseMessage := createError("Method not supported")
-			w.WriteHeader(403)
-			fmt.Fprintf(w, string(responseMessage))
-
-			return
-		}
-
-		handler(w, r)
-	}
-}
