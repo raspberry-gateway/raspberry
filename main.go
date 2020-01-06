@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/RangelReale/osin"
 	"github.com/Sirupsen/logrus"
 	"github.com/buger/goterm"
 	"github.com/docopt/docopt.go"
@@ -33,7 +34,8 @@ var doMemoryProfile bool
 
 // Generic system error
 const (
-	E_SYSTEM_ERROR string = "{\"status\": \"system error, please contact administrator\"}"
+	E_SYSTEM_ERROR          string = "{\"status\": \"system error, please contact administrator\"}"
+	OAUTH_AUTH_CODE_TIMEOUT int    = 60 * 60
 )
 
 func displayConfig() {
@@ -42,6 +44,24 @@ func displayConfig() {
 
 	fmt.Println(configTable)
 	fmt.Println("")
+}
+
+func addOAuthHandlers(spec APISpec, Muxer *http.ServeMux) {
+	apiAuthorizePath := spec.Proxy.ListenPath + "/raspberry/oauth/authorize-client/"
+	clientAuthPath := spec.Proxy.ListenPath + "oauth/authorize/"
+	clientAccessPath := spec.Proxy.ListenPath + "oauth/token/"
+
+	serverConfig := osin.NewServerConfig()
+	serverConfig.ErrorStatusCode = 403
+	OAuthPrefix := "oauth-data." + spec.APIID
+	osinStorage := RedisOsinStorageInterface{&RedisStorageManager{KeyPrefix: OAuthPrefix}}
+	osinServer := osin.NewServer(serverConfig, osinStorage)
+	oauthManager := OAuthManager{osinServer}
+	oauthHandlers := OAuthHandlers{oauthManager}
+
+	Muxer.HandleFunc(apiAuthorizePath, CheckIsAPIOwner(oauthHandlers.HandleGenerateAuthCodeData))
+	Muxer.HandleFunc(clientAuthPath, oauthHandlers.HandleAuthorizePassthrough)
+	Muxer.HandleFunc(clientAccessPath, oauthHandlers.HandleAccessRequest)
 }
 
 func setupGlobals() {
