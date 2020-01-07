@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/RangelReale/osin"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -14,10 +15,15 @@ import (
 
 // APIDefinition represents the configuration for a single proxied API and it's versions.
 type APIDefinition struct {
-	ID                bson.ObjectId `bson:"_id,omitempty" json:"id"`
-	Name              string        `bson:"name" json:"name"`
-	APIID             string        `bson:"api_id" json:"api_id"`
-	OrgID             string        `bson:"org_id" json:"org_id"`
+	ID         bson.ObjectId `bson:"_id,omitempty" json:"id"`
+	Name       string        `bson:"name" json:"name"`
+	APIID      string        `bson:"api_id" json:"api_id"`
+	OrgID      string        `bson:"org_id" json:"org_id"`
+	UseOauth2  bool          `bson:"use_oauth2" json:"use_oauth2"`
+	Oauth2Meta struct {
+		AllowedAccessTypes    []osin.AllowedAccessType    `bson:"allowed_access_types" json:"allowed_access_types"`
+		AllowedAuthorizeTypes []osin.AllowedAuthorizeType `bson:"allowed_authorize_types" json:"allowed_authorize_types"`
+	} `bson:"oauth2_meta" json:"oauth2_meta"`
 	VersionDefinition struct {
 		Location string `bson:"location" json:"location"`
 		Key      string `bson:"key" json:"key"`

@@ -36,6 +36,7 @@ var doMemoryProfile bool
 const (
 	E_SYSTEM_ERROR          string = "{\"status\": \"system error, please contact administrator\"}"
 	OAUTH_AUTH_CODE_TIMEOUT int    = 60 * 60
+	OAUTH_PREFIX            string = "oauth-data."
 )
 
 func displayConfig() {
@@ -44,39 +45,6 @@ func displayConfig() {
 
 	fmt.Println(configTable)
 	fmt.Println("")
-}
-
-func addOAuthHandlers(spec APISpec, Muxer *http.ServeMux) {
-	apiAuthorizePath := spec.Proxy.ListenPath + "/raspberry/oauth/authorize-client/"
-	clientAuthPath := spec.Proxy.ListenPath + "oauth/authorize/"
-	clientAccessPath := spec.Proxy.ListenPath + "oauth/token/"
-
-	serverConfig := osin.NewServerConfig()
-	serverConfig.ErrorStatusCode = 403
-	serverConfig.AllowedAccessTypes = osin.AllowedAccessType{osin.AUTHORIZATION_CODE, osin.REFRESH_TOKEN}
-	serverConfig.AllowedAuthorizeTypes = osin.AllowedAuthorizeType{osin.CODE, osin.TOKEN}
-	OAuthPrefix := "oauth-data." + spec.APIID
-	storageManager := RedisStorageManager{KeyPrefix: OAuthPrefix}
-	storageManager.Connect()
-	osinStorage := RedisOsinStorageInterface{&storageManager}
-
-	// TODO: Remove this
-	log.Warning("Adding test client")
-	testClient := &osin.Client{
-		Id:          "1234",
-		Secret:      "aabbccdd",
-		RedirectUri: "http://client.oauth.com",
-	}
-	osinStorage.SetClient(testClient.Id, testClient)
-	log.Warning("Test client added")
-
-	osinServer := osin.NewServer(serverConfig, osinStorage)
-	oauthManager := OAuthManager{osinServer}
-	oauthHandlers := OAuthHandlers{oauthManager}
-
-	Muxer.HandleFunc(apiAuthorizePath, CheckIsAPIOwner(oauthHandlers.HandleGenerateAuthCodeData))
-	Muxer.HandleFunc(clientAuthPath, oauthHandlers.HandleAuthorizePassthrough)
-	Muxer.HandleFunc(clientAccessPath, oauthHandlers.HandleAccessRequest)
 }
 
 func setupGlobals() {
@@ -197,6 +165,41 @@ func getAPISpecs() []APISpec {
 	return APISpecs
 }
 
+func addOAuthHandlers(spec APISpec, Muxer *http.ServeMux) {
+	apiAuthorizePath := spec.Proxy.ListenPath + "/raspberry/oauth/authorize-client/"
+	clientAuthPath := spec.Proxy.ListenPath + "oauth/authorize/"
+	clientAccessPath := spec.Proxy.ListenPath + "oauth/token/"
+
+	serverConfig := osin.NewServerConfig()
+	serverConfig.ErrorStatusCode = 403
+	serverConfig.AllowedAccessTypes = spec.Oauth2Meta.AllowedAccessTypes       // osin.AllowedAccessType{osin.AUTHORIZATION_CODE, osin.REFRESH_TOKEN}
+	serverConfig.AllowedAuthorizeTypes = spec.Oauth2Meta.AllowedAuthorizeTypes // osin.AllowedAuthorizeType{osin.CODE, osin.TOKEN}
+
+	OAuthPrefix := OAUTH_PREFIX + spec.APIID
+	storageManager := RedisStorageManager{KeyPrefix: OAuthPrefix}
+	storageManager.Connect()
+	osinStorage := RedisOsinStorageInterface{&storageManager}
+
+	// TODO: Remove this
+	log.Warning("Adding test client")
+	testClient := &osin.Client{
+		Id:          "1234",
+		Secret:      "aabbccdd",
+		RedirectUri: "http://client.oauth.com",
+	}
+	osinStorage.SetClient(testClient.Id, testClient)
+	log.Warning("Test client added")
+
+	osinServer := osin.NewServer(serverConfig, osinStorage)
+	osinServer.AccessTokenGen = &AccessTokenGenRaspberry{}
+	oauthManager := OAuthManager{osinServer}
+	oauthHandlers := OAuthHandlers{oauthManager}
+
+	Muxer.HandleFunc(apiAuthorizePath, CheckIsAPIOwner(oauthHandlers.HandleGenerateAuthCodeData))
+	Muxer.HandleFunc(clientAuthPath, oauthHandlers.HandleAuthorizePassthrough)
+	Muxer.HandleFunc(clientAccessPath, oauthHandlers.HandleAccessRequest)
+}
+
 func loadApps(APISpecs []APISpec, Muxer *http.ServeMux) {
 	// load the API defs
 	log.Info("Loading API configurations.")
@@ -208,7 +211,12 @@ func loadApps(APISpecs []APISpec, Muxer *http.ServeMux) {
 			log.Error("Could not parse target URL")
 			log.Error(err)
 		}
-		log.Info(remote)
+
+		// TODO: Remove this, testing only
+		if spec.UseOauth2 {
+			addOAuthHandlers(spec, Muxer)
+		}
+
 		proxy := httputil.NewSingleHostReverseProxy(remote)
 
 		proxyHandler := http.HandlerFunc(ProxyHandler(proxy, spec))
@@ -217,6 +225,7 @@ func loadApps(APISpecs []APISpec, Muxer *http.ServeMux) {
 		chain := alice.New(
 			VersionCheck{raspberryMiddleware}.New(),
 			KeyExists{raspberryMiddleware}.New(),
+			Oauth2KeyExists{raspberryMiddleware}.New(),
 			KeyExpired{raspberryMiddleware}.New(),
 			AccessRightsCheck{raspberryMiddleware}.New(),
 			RateLimitAndQuotaCheck{raspberryMiddleware}.New()).Then(proxyHandler)
