@@ -57,9 +57,9 @@ Effort required by resource Owner:
 
 // OAuthClient is a representation within an APISpec of a client
 type OAuthClient struct {
-	ClientID          string
-	ClientSecret      string
-	ClientRedirectURI string
+	ClientID          string `json:"client_id"`
+	ClientSecret      string `json:"client_secret"`
+	ClientRedirectURI string `json:"client_redirect_uri"`
 }
 
 type OAuthNotificationType string
@@ -281,10 +281,10 @@ func (o *OAuthManager) IsRequestValid(r *http.Request) bool {
 // These enums fix the prefix to use when storing various OAuth keys and data, since we
 // delegate everything to the osin framework
 const (
-	AUTH_PREFIX    string = "oauth-authorize-"
-	CLIENT_PREFIX  string = "oauth-clientid-"
-	ACCESS_PREFIX  string = "oauth-access-"
-	REFRESH_PREFIX string = "oauth-refresh-"
+	AUTH_PREFIX    string = "oauth-authorize."
+	CLIENT_PREFIX  string = "oauth-clientid."
+	ACCESS_PREFIX  string = "oauth-access."
+	REFRESH_PREFIX string = "oauth-refresh."
 )
 
 // RedisOsinStorageInterface implements osin.Storage interface to use Raspberry's own storage mechanism
@@ -313,7 +313,7 @@ func (r RedisOsinStorageInterface) GetClient(id string) (*osin.Client, error) {
 }
 
 // SetClient creates client data
-func (r RedisOsinStorageInterface) SetClient(id string, client *osin.Client) error {
+func (r RedisOsinStorageInterface) SetClient(id string, client *osin.Client, ignorePrefix bool) error {
 	clientDataJSON, err := json.Marshal(&client)
 	if err != nil {
 		log.Error("Couldn't marshal client data")
@@ -322,6 +322,10 @@ func (r RedisOsinStorageInterface) SetClient(id string, client *osin.Client) err
 	}
 
 	key := CLIENT_PREFIX + id
+	if ignorePrefix {
+		key = id
+	}
+
 	r.store.SetKey(key, string(clientDataJSON), 0)
 	return nil
 }

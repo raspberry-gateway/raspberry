@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/RangelReale/osin"
 	"github.com/Sirupsen/logrus"
 	uuid "github.com/nu7hatch/gouuid"
 )
@@ -88,6 +90,85 @@ func createKeyHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(code)
 	fmt.Fprintf(w, string(responseMessage))
+}
+
+type NewClientRequest struct {
+	ClientRedirectURI string `json:"redirect_uri"`
+	APIID             string `json:"api_id"`
+}
+
+func createOauthClient(w http.ResponseWriter, r *http.Request) {
+	var responseMessage []byte
+	code := 200
+
+	if r.Method == "POST" {
+		decoder := json.NewDecoder(r.Body)
+		var newOauthClient NewClientRequest
+		err := decoder.Decode(&newOauthClient)
+
+		if err != nil {
+			responseMessage = []byte(E_SYSTEM_ERROR)
+			code = 500
+			log.Error("Couldn't decode body")
+			log.Error(err)
+		}
+
+		// Do stuff
+
+		u5, err := uuid.NewV4()
+		cleanString := strings.Replace(u5.String(), "-", "", -1)
+		u5Secret, err := uuid.NewV4()
+		secret := base64.StdEncoding.EncodeToString([]byte(u5Secret.String()))
+
+		newClient := osin.Client{}
+		newClient.Id = cleanString
+		newClient.RedirectUri = newOauthClient.ClientRedirectURI
+		newClient.Secret = secret
+
+		// + "." + spec.APIID + "."
+		storageID := OAUTH_PREFIX + newOauthClient.APIID + "." + CLIENT_PREFIX + newClient.Id
+		storeErr := genericOsinStorage.SetClient(storageID, &newClient, true)
+
+		if storeErr != nil {
+			log.Error("Failure to save new client data: ", storeErr)
+			responseMessage = createError("Failure in storing client data")
+		}
+
+		reportableClientData := OAuthClient{
+			ClientID:          newClient.Id,
+			ClientSecret:      newClient.Secret,
+			ClientRedirectURI: newClient.RedirectUri,
+		}
+
+		responseMessage, err = json.Marshal(&reportableClientData)
+
+		if err != nil {
+			log.Error("Marshalling failed")
+			log.Error(err)
+			responseMessage = []byte(E_SYSTEM_ERROR)
+			code = 500
+		} else {
+			log.WithFields(logrus.Fields{
+				"key": newClient.Id,
+			}).Info("New OAuth Client registered successfully.")
+		}
+
+	} else {
+		code = 405
+		responseMessage = createError("Method not supported")
+	}
+
+	w.WriteHeader(code)
+	fmt.Fprintf(w, string(responseMessage))
+}
+
+func MakeNewOsinServer() *RedisOsinStorageInterface {
+	log.Info("Creating generic redis OAuth connection")
+	storageManager := RedisStorageManager{KeyPrefix: ""}
+	storageManager.Connect()
+	osinStorage := &RedisOsinStorageInterface{&storageManager}
+
+	return osinStorage
 }
 
 func handleAddOrUpdate(keyName string, r *http.Request) ([]byte, int) {
