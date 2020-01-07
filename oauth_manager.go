@@ -73,7 +73,6 @@ const (
 type NewOAuthNofication struct {
 	AuthCode         string
 	NewOAuthToken    string
-	OldOAuthToken    string
 	RefreshToken     string
 	OldRefreshToken  string
 	NotificationType OAuthNotificationType
@@ -106,8 +105,8 @@ func (o *OAuthHandlers) generateOAuthOutputFromOsinResponse(osinResponse *osin.R
 }
 
 func (o *OAuthHandlers) notifyClientOfNewOAuth(notification NewOAuthNofication) bool {
-	log.Warning("MOCK NOTIFICATION: NEW AUTH")
-	log.Warning("Output: ", notification)
+	log.Info("Notifying client host")
+	go o.Manager.Api.NotificationsDetails.SendRequest(false, 0, notification)
 	return true
 }
 
@@ -208,12 +207,18 @@ func (o *OAuthHandlers) HandleAccessRequest(w http.ResponseWriter, r *http.Reque
 		}
 		log.Debug("REFRESH: ", RefreshToken)
 		log.Debug("Old REFRESH: ", OldRefreshToken)
+
+		notificationType := NEW_ACCESS_TOKEN
+		if OldRefreshToken != "" {
+			notificationType = REFRESH_ACCESS_TOKEN
+		}
+
 		newNotification := NewOAuthNofication{
 			AuthCode:         code,
 			NewOAuthToken:    NewOAuthToken,
 			RefreshToken:     RefreshToken,
 			OldRefreshToken:  OldRefreshToken,
-			NotificationType: NEW_ACCESS_TOKEN,
+			NotificationType: notificationType,
 		}
 
 		o.notifyClientOfNewOAuth(newNotification)
@@ -230,6 +235,7 @@ func (o *OAuthHandlers) HandleAccessRequest(w http.ResponseWriter, r *http.Reque
 
 // OAuthManager handles and wraps osin OAuth2 functions to handle authorise and access requests
 type OAuthManager struct {
+	Api        APISpec
 	OsinServer *osin.Server
 }
 

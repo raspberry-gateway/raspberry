@@ -192,8 +192,10 @@ func addOAuthHandlers(spec APISpec, Muxer *http.ServeMux) {
 
 	osinServer := osin.NewServer(serverConfig, osinStorage)
 	osinServer.AccessTokenGen = &AccessTokenGenRaspberry{}
-	oauthManager := OAuthManager{osinServer}
+	oauthManager := OAuthManager{spec, osinServer}
 	oauthHandlers := OAuthHandlers{oauthManager}
+
+	log.Warning("Configuration", spec.NotificationsDetails)
 
 	Muxer.HandleFunc(apiAuthorizePath, CheckIsAPIOwner(oauthHandlers.HandleGenerateAuthCodeData))
 	Muxer.HandleFunc(clientAuthPath, oauthHandlers.HandleAuthorizePassthrough)
