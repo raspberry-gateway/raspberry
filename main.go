@@ -171,6 +171,7 @@ func getAPISpecs() []APISpec {
 
 func addOAuthHandlers(spec APISpec, Muxer *http.ServeMux) {
 	apiAuthorizePath := spec.Proxy.ListenPath + "/raspberry/oauth/authorize-client/"
+	clientAuthHandlePath := spec.Proxy.ListenPath + "/raspberry/oauth/clients"
 	clientAuthPath := spec.Proxy.ListenPath + "oauth/authorize/"
 	clientAccessPath := spec.Proxy.ListenPath + "oauth/token/"
 
@@ -204,6 +205,7 @@ func addOAuthHandlers(spec APISpec, Muxer *http.ServeMux) {
 	Muxer.HandleFunc(apiAuthorizePath, CheckIsAPIOwner(oauthHandlers.HandleGenerateAuthCodeData))
 	Muxer.HandleFunc(clientAuthPath, oauthHandlers.HandleAuthorizePassthrough)
 	Muxer.HandleFunc(clientAccessPath, oauthHandlers.HandleAccessRequest)
+	Muxer.HandleFunc(clientAuthHandlePath, CheckIsAPIOwner(oAuthClientHandler))
 }
 
 func loadApps(APISpecs []APISpec, Muxer *http.ServeMux) {

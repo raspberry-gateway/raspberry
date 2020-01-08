@@ -295,6 +295,7 @@ type RedisOsinStorageInterface struct {
 // GetClient will retrieve client data
 func (r RedisOsinStorageInterface) GetClient(id string) (*osin.Client, error) {
 	key := CLIENT_PREFIX + id
+
 	clientJSON, storeErr := r.store.GetKey(key)
 
 	if storeErr != nil {
@@ -312,6 +313,51 @@ func (r RedisOsinStorageInterface) GetClient(id string) (*osin.Client, error) {
 	return &thisClient, nil
 }
 
+// GetClientNoPrefix will retrieve client data
+func (r RedisOsinStorageInterface) GetClientNoPrefix(id string) (*osin.Client, error) {
+
+	key := id
+
+	clientJSON, storeErr := r.store.GetKey(key)
+
+	if storeErr != nil {
+		log.Error("Failure retrieving client ID key")
+		log.Error(storeErr)
+		return nil, storeErr
+	}
+
+	thisClient := osin.Client{}
+	if marshalErr := json.Unmarshal([]byte(clientJSON), &thisClient); marshalErr != nil {
+		log.Error("Couldn't unmarshal OAuth client object")
+		log.Error(marshalErr)
+	}
+
+	return &thisClient, nil
+}
+
+func (r RedisOsinStorageInterface) GetClients(filter string, ignorePrefix bool) (*[]osin.Client, error) {
+	key := CLIENT_PREFIX + filter
+	if ignorePrefix {
+		key = filter
+	}
+
+	clientJSON := r.store.GetKeysAndValuesWithFilter(key)
+
+	theseClients := []osin.Client{}
+
+	for _, clientJSON := range clientJSON {
+		thisClient := osin.Client{}
+		if marshalErr := json.Unmarshal([]byte(clientJSON), &thisClient); marshalErr != nil {
+			log.Error("Couldn't unmarshal OAuth client object")
+			log.Error(marshalErr)
+			return &theseClients, marshalErr
+		}
+		theseClients = append(theseClients, thisClient)
+	}
+
+	return &theseClients, nil
+}
+
 // SetClient creates client data
 func (r RedisOsinStorageInterface) SetClient(id string, client *osin.Client, ignorePrefix bool) error {
 	clientDataJSON, err := json.Marshal(&client)
@@ -327,6 +373,17 @@ func (r RedisOsinStorageInterface) SetClient(id string, client *osin.Client, ign
 	}
 
 	r.store.SetKey(key, string(clientDataJSON), 0)
+	return nil
+}
+
+// DeleteClient Removes a client from the Redis
+func (r RedisOsinStorageInterface) DeleteClient(id string, ignorePrefix bool) error {
+	key := CLIENT_PREFIX + id
+	if ignorePrefix {
+		key = id
+	}
+
+	r.store.DeleteKey(key)
 	return nil
 }
 
