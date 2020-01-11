@@ -1,10 +1,11 @@
 raspberry
 =========
+
 An open source gateway by go.
 
 The API Gateway sits between your API and the wider internet, essentially it acts as a reverse proxy which filters your traffic as it comes towards your API.
 
-Features:
+Features
 ---------
 
 - Request throttling
