@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "/Users/wacai/go/src/tyk"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"go.formatTool": "goformat",
+		"go.autocompleteUnimportedPackages": true,
+	}
+}
