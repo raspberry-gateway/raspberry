@@ -51,7 +51,7 @@ func (t *TranslationFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return t.TextFormatter.Format(entry)
 }
 
-// RawFomatter defines that does not extends any capabilities.
+// RawFormatter defines that does not extends any capabilities.
 type RawFormatter struct{}
 
 // Format override Format function of TextFormatter for RawFormatter.
