@@ -1,6 +1,8 @@
 package main
 
-import "raspberry/gateway"
+import (
+	"raspberry/gateway"
+)
 
 func main() {
 	gateway.Start()

@@ -3,14 +3,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dc05451a05026c85b81352cd30eb89c1655e7c6a7bd7075d97f091f14ac4d334"
+  digest = "1:4e9e9240ff9b20d5069f6f76c0cec15febb907ab7518a94ac8bd3ae93575f2f3"
   name = "github.com/IBlogLab/raspberry"
   packages = [
     "cli",
+    "gateway",
     "log",
   ]
   pruneopts = "UT"
-  revision = "99662cc68aab2015de812eefd0f09961cc2ee961"
+  revision = "dc384baec644ecf4c5d964fc3c9f093adb2d4356"
 
 [[projects]]
   branch = "master"
@@ -143,6 +144,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/IBlogLab/raspberry/cli",
+    "github.com/IBlogLab/raspberry/gateway",
     "github.com/IBlogLab/raspberry/log",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
