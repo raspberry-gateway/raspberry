@@ -62,12 +62,12 @@ func (f *RawFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 // Get gets log that extend capabilities, e.g. translations
 // Config supported by os env params `RASPBERRY_LOGLEVEL`
 func Get() *logrus.Logger {
-	switch strings.ToLower(os.Getenv("RASPBERRY_LOGLEVEL")) {
-	case "error":
+	switch strings.ToLower(os.Getenv(RaspberryLogLevel)) {
+	case Error:
 		log.Level = logrus.ErrorLevel
-	case "warn":
+	case Wran:
 		log.Level = logrus.WarnLevel
-	case "debug":
+	case Debug:
 		log.Level = logrus.DebugLevel
 	default:
 		log.Level = logrus.InfoLevel

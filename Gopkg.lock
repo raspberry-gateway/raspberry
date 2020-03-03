@@ -3,11 +3,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:60db2d80b11368949f547f319ba6f0d0c32a43d25ce6acbd8fa4e2f79b382270"
+  digest = "1:dc05451a05026c85b81352cd30eb89c1655e7c6a7bd7075d97f091f14ac4d334"
   name = "github.com/IBlogLab/raspberry"
-  packages = ["log"]
+  packages = [
+    "cli",
+    "log",
+  ]
   pruneopts = "UT"
-  revision = "be3a33a2255300eec6afd9433756aa90cd9f4be3"
+  revision = "99662cc68aab2015de812eefd0f09961cc2ee961"
 
 [[projects]]
   branch = "master"
@@ -106,18 +109,18 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "2aa609cf4a9d7d1126360de73b55b6002f9e052a"
+  revision = "78000ba7a073cafc0278790f6bce552a0f25850e"
 
 [[projects]]
   branch = "master"
-  digest = "1:e90dee29d3c822f373a846dce354cf63abe0bdbef4d41ecea9028706697163cc"
+  digest = "1:e32edd8d81fe0447cb6855e2d2b0549b63717539513e09b3a1e4bb20d48f46c6"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "062a44052db13d4260a3225603b5b501907478f5"
+  revision = "5c8b2ff67527cb88b770f693cebf3799036d8bc0"
 
 [[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
@@ -139,6 +142,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/IBlogLab/raspberry/cli",
     "github.com/IBlogLab/raspberry/log",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
