@@ -1,9 +1,13 @@
 package gateway
 
-import "context"
+import (
+	"context",
+
+	cli "github.com/IBlogLab/raspberry/cli"
+)
 
 func Start() {
-	_, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 }

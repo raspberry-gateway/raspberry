@@ -3,6 +3,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:60db2d80b11368949f547f319ba6f0d0c32a43d25ce6acbd8fa4e2f79b382270"
+  name = "github.com/IBlogLab/raspberry"
+  packages = ["log"]
+  pruneopts = "UT"
+  revision = "be3a33a2255300eec6afd9433756aa90cd9f4be3"
+
+[[projects]]
+  branch = "master"
   digest = "1:125f098c5294814b5d9ce2194f03a435c35a6208f029e61681bed9a893d68133"
   name = "github.com/alecthomas/template"
   packages = [
@@ -109,7 +117,7 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "5d559ad92b82f3696a2a2f23108ac03758aabedb"
+  revision = "062a44052db13d4260a3225603b5b501907478f5"
 
 [[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
@@ -131,6 +139,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/IBlogLab/raspberry/log",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
     "github.com/x-cray/logrus-prefixed-formatter",

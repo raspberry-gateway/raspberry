@@ -28,8 +28,6 @@
   name = "gopkg.in/alecthomas/kingpin.v2"
   version = "2.2.6"
 
-
-
 [[constraint]]
   name = "github.com/x-cray/logrus-prefixed-formatter"
   version = "0.5.2"
@@ -41,3 +39,7 @@
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.5.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/IBlogLab/raspberry"
