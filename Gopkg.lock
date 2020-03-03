@@ -3,7 +3,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4e9e9240ff9b20d5069f6f76c0cec15febb907ab7518a94ac8bd3ae93575f2f3"
+  digest = "1:7f238766b86d56b5f886978576a7474da9eeeb97bb359db936271ab6e60eafec"
   name = "github.com/IBlogLab/raspberry"
   packages = [
     "cli",
@@ -11,7 +11,7 @@
     "log",
   ]
   pruneopts = "UT"
-  revision = "dc384baec644ecf4c5d964fc3c9f093adb2d4356"
+  revision = "aa25ad293262c36135762d7a84fad541dfe361bc"
 
 [[projects]]
   branch = "master"
@@ -81,6 +81,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
+
+[[projects]]
   digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
@@ -146,6 +154,7 @@
     "github.com/IBlogLab/raspberry/cli",
     "github.com/IBlogLab/raspberry/gateway",
     "github.com/IBlogLab/raspberry/log",
+    "github.com/satori/go.uuid",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
     "github.com/x-cray/logrus-prefixed-formatter",
