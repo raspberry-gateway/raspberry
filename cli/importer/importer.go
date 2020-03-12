@@ -14,23 +14,23 @@ const (
 )
 
 var (
-	imp 		   *Importer
+	imp            *Importer
 	errUnknownMode = errors.New("Unknown mode")
 )
 
 // Importer wraps the import functionlity
 type Importer struct {
-	input *string
-	swaggerMode *bool
-	bluePrintMode *bool
-	wsdlMode *bool
-	portNames *string
-	createAPI *bool
-	orgID *string
+	input          *string
+	swaggerMode    *bool
+	bluePrintMode  *bool
+	wsdlMode       *bool
+	portNames      *string
+	createAPI      *bool
+	orgID          *string
 	upstreamTarget *string
-	asMock *bool
-	forAPI *string
-	asVersion *string
+	asMock         *bool
+	forAPI         *string
+	asVersion      *string
 }
 
 func init() {
@@ -38,7 +38,7 @@ func init() {
 }
 
 // AddTo initializes an importer object.
-func AddTo(app *kingpin.Application)  {
+func AddTo(app *kingpin.Application) {
 	cmd := app.Command(cmdName, cmdDesc)
 	imp.input = cmd.Arg("input file", "e.g. blueprint.json, swagger.json, service.wsdl etc.").String()
 	imp.swaggerMode = cmd.Flag("swagger", "Use Swagger mode").Bool()
@@ -51,25 +51,25 @@ func AddTo(app *kingpin.Application)  {
 	imp.asMock = cmd.Flag("as-mock", "creates the API as a mock based on example fields").Bool()
 	imp.forAPI = cmd.Flag("for-api", "adds blueprint to existing API Definition as version").PlaceHolder("PATH").String()
 	imp.asVersion = cmd.Flag("as-version", "the version number to use when inserting").PlaceHolder("VERSION").String()
-	cmd.Action(imp.Import)
+	// cmd.Action(imp.Import)
 }
 
 // Import performs the import process.
-func (i *Importer) Import(ctx *kingpin.ParseContext) (err error) {
-	if *i.swaggerMode {
-		
-	}
-}
+// func (i *Importer) Import(ctx *kingpin.ParseContext) (err error) {
+// 	if *i.swaggerMode {
 
-func (i *Importer) handleSwaggerMode() error {
-	if *i.createAPI {
-		if *i.upstreamTarget != "" && *i.orgID != "" {
-			// Create the API with the blueprint
-			s, err := 
-		}
-	}
-}
+// 	}
+// }
 
-func (i *Importer) swaggerLoadFile(path string) (*importer.swaggerAST, error) {
+// func (i *Importer) handleSwaggerMode() error {
+// 	if *i.createAPI {
+// 		if *i.upstreamTarget != "" && *i.orgID != "" {
+// 			// Create the API with the blueprint
+// 			//
+// 		}
+// 	}
+// }
 
-}
+// func (i *Importer) swaggerLoadFile(path string) (*importer.swaggerAST, error) {
+
+// }
