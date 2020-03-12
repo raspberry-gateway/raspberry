@@ -42,4 +42,4 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/IBlogLab/raspberry"
+  name = "github.com/raspberry-gateway/raspberry"
