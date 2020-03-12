@@ -3,15 +3,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7f238766b86d56b5f886978576a7474da9eeeb97bb359db936271ab6e60eafec"
+  digest = "1:6904ab61ae8183ecb588a0759e32d9b8f23118f1a25a6091295e879ce10e3a68"
   name = "github.com/IBlogLab/raspberry"
   packages = [
     "cli",
     "gateway",
+    "headers",
     "log",
   ]
   pruneopts = "UT"
-  revision = "aa25ad293262c36135762d7a84fad541dfe361bc"
+  revision = "ffd5eaf2b4af9e9db5b8dc581d775569f5c5b1d0"
 
 [[projects]]
   branch = "master"
@@ -153,6 +154,7 @@
   input-imports = [
     "github.com/IBlogLab/raspberry/cli",
     "github.com/IBlogLab/raspberry/gateway",
+    "github.com/IBlogLab/raspberry/headers",
     "github.com/IBlogLab/raspberry/log",
     "github.com/satori/go.uuid",
     "github.com/sirupsen/logrus",
