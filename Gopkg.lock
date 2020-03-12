@@ -69,6 +69,19 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ce26816c6f3c172e8a3a7a55d213fd85126d0ce75305cbc402b7b698fb93a729"
+  name = "github.com/raspberry-gateway/raspberry"
+  packages = [
+    "cli",
+    "gateway",
+    "headers",
+    "log",
+  ]
+  pruneopts = "UT"
+  revision = "2fac1f729902b89232842503c8690ecee7478bf2"
+
+[[projects]]
   digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
   name = "github.com/satori/go.uuid"
   packages = ["."]
@@ -139,6 +152,10 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/raspberry-gateway/raspberry/cli",
+    "github.com/raspberry-gateway/raspberry/gateway",
+    "github.com/raspberry-gateway/raspberry/headers",
+    "github.com/raspberry-gateway/raspberry/log",
     "github.com/satori/go.uuid",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
