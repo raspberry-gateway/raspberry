@@ -1,7 +1,7 @@
 package main
 
 import (
-	"raspberry/gateway"
+	"github.com/raspberry-gateway/raspberry/gateway"
 )
 
 func main() {

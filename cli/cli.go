@@ -6,7 +6,7 @@ import (
 	"os"
 	"tyk/cli/linter"
 
-	logger "github.com/IBlogLab/raspberry/log"
+	logger "github.com/raspberry-gateway/raspberry/log"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 

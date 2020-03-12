@@ -5,8 +5,8 @@ import (
 	"os"
 	"sync"
 
-	cli "github.com/IBlogLab/raspberry/cli"
-	"github.com/IBlogLab/raspberry/gateway"
+	cli "github.com/raspberry-gateway/raspberry/cli"
+	"github.com/raspberry-gateway/raspberry/gateway"
 	uuid "github.com/satori/go.uuid"
 )
 
