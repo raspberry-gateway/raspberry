@@ -8,6 +8,14 @@ import (
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
+// Defines for consitants about log
+const (
+	LogLevel = "RASPBERRY_LOGLEVEL"
+	Error    = "error"
+	Warn     = "warn"
+	Debug    = "debug"
+)
+
 var (
 	log          = logrus.New()
 	rawLog       = logrus.New()
@@ -62,12 +70,12 @@ func (f *RawFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 // Get gets log that extend capabilities, e.g. translations
 // Config supported by os env params `RASPBERRY_LOGLEVEL`
 func Get() *logrus.Logger {
-	switch strings.ToLower(os.Getenv("RASPBERRY_LOGLEVEL")) {
-	case "error":
+	switch strings.ToLower(os.Getenv(LogLevel)) {
+	case Error:
 		log.Level = logrus.ErrorLevel
-	case "warn":
+	case Warn:
 		log.Level = logrus.WarnLevel
-	case "debug":
+	case Debug:
 		log.Level = logrus.DebugLevel
 	default:
 		log.Level = logrus.InfoLevel

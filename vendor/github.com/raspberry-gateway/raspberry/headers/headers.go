@@ -27,7 +27,7 @@ const (
 // keys of request Context.
 const (
 	XRealIP                 = "X-Real-IP"
-	XForwardFor             = "X-Forwarded-For"
+	XForwardFor             = "X-Forward-For"
 	XAuthResult             = "X-Auth-Result"
 	XSessionAlias           = "X-Session-Alias"
 	XInitialURI             = "X-Initial-URI"
@@ -51,5 +51,5 @@ const (
 
 // HTTP Context standard keys
 const (
-	RemoteAddr = "remote_addr"
+	RemoteAddr = "Remote-Addr"
 )
