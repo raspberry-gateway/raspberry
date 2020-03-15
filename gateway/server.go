@@ -39,7 +39,7 @@ var (
 
 // Start The function Raspberry Gateway entry.
 func Start() {
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	cli.Init(VERSION, confPaths)
@@ -61,7 +61,7 @@ func SetNodeID(nodeID string) {
 }
 
 func initialliseSystem(ctx context.Context) error {
-	if isRunningTests() && os.Getenv(log.LogLevel) == "" {
+	if isRunningTests() && os.Getenv(logger.LogLevel) == "" {
 		// `go test` without RASPBERRY_LOGLEVEL set defaults to no log output
 		log.Level = logrus.ErrorLevel
 		log.Out = ioutil.Discard
@@ -78,6 +78,10 @@ func initialliseSystem(ctx context.Context) error {
 	}
 
 	mainLog.Infof("Raspberry API gateway %s", VERSION)
+
+	if !isRunningTests() {
+		config
+	}
 }
 
 func isRunningTests() bool {
