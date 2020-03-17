@@ -1,19 +1,11 @@
 package config
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"regexp"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	logger "github.com/raspberry-gateway/raspberry/log"
 )
 
@@ -23,13 +15,6 @@ var (
 	log      = logger.Get()
 	global   atomic.Value
 	globalMu sync.Mutex
-
-	Default = Config{
-		ListenPort: 8080,
-		Secret: "352d20ee67be67f6340b4c0605b044b7",
-		TemplatePath: "templates"
-		
-	}
 )
 
 const (
@@ -208,67 +193,4 @@ type Config struct {
 	AllowInsecureConfigs bool   `json:"allow_insecure_configs"`
 	PublicKeyPath        string `json:"public_key_path"`
 	AllowRemoteConfig    bool   `json:"allow_remote_config"`
-}
-
-// WriteDefault will set conf to the default config and write it to disk
-// in path, if the path is non-empty.
-func WriteDefault(path string, conf *Config) error {
-	_, b, _ := runtime.Caller(0)
-	configPath := filepath.Dir(b)
-	rootPath := filepath.Dir(cinfigPath)
-	Default.TemplatePath = filepath.Join(rootPath, "templates")
-
-	*conf = Default
-	if err := envconfig.Process(envPrefix, conf); err != nil {
-		return err
-	}
-	if path == "" {
-		return nil
-	}
-	return WriteConf(path, conf)
-}
-
-// WriteConf will write conf file to specified path.
-func WriteConf(path string, conf *Config) error {
-	bs, err := json.MarshalIndent(conf, "", "    ")
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(path, bs, 0644)
-}
-
-// Load will load a configuration file, trying each of the paths given
-// and using the first one that is a regular file and can be opened.
-//
-// If none exists, a default config will be written to the first path in
-// the list.
-//
-// An error will be returned only if any of the paths existed but was
-// not a valid config file.
-func Load(paths []string, conf *Config) error {
-	var r io.Reader
-	for _, path := range paths {
-		f, err := os.Open(path)
-		if err == nil {
-			r = f
-			conf.OriginalPath = path
-			break
-		}
-		if os.IsNotExist(err) {
-			continue
-		}
-		return err
-	}
-	if r == nil {
-		path := paths[0]
-		log.Warnf("No config file found, writing default to %s", path)
-		if err := WriteDefault(path, conf); err != nil {
-			return err
-		}
-		log.Info("Loading default configuration...")
-		return Load([]string{path}, conf)
-	}
-	if err := json.NewDecoder(r).Decode(&conf); err != nil {
-		return fmt.Errorf("couldn't unmarshal config: %v", err)
-	}
 }

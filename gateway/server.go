@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	cli "github.com/raspberry-gateway/raspberry/cli"
+	"github.com/raspberry-gateway/raspberry/config"
 	logger "github.com/raspberry-gateway/raspberry/log"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
@@ -80,7 +81,7 @@ func initialliseSystem(ctx context.Context) error {
 	mainLog.Infof("Raspberry API gateway %s", VERSION)
 
 	if !isRunningTests() {
-		config
+		globalConf := config.Config{}
 	}
 }
 

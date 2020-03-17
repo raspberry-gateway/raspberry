@@ -29,6 +29,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:fd9bea48bbc5bba66d9891c72af7255fbebecdff845c37c679406174ece5ca1b"
+  name = "github.com/kelseyhightower/envconfig"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0b417c4ec4a8a82eecc22a1459a504aa55163d61"
+  version = "v1.4.0"
+
+[[projects]]
   digest = "1:31e761d97c76151dde79e9d28964a812c46efc5baee4085b86f68f0c654450de"
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
@@ -70,16 +78,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bf5aab13b0a72659e32da926f9e79cddb0902cf9c28ab9fb3be955194934b2af"
+  digest = "1:f02b3c1c0ef7721563c34dfbadf2c8ed04934fb20adacc23daaa144b1503ed41"
   name = "github.com/raspberry-gateway/raspberry"
   packages = [
     "cli",
+    "config",
     "gateway",
     "headers",
     "log",
   ]
   pruneopts = "UT"
-  revision = "d3627c35a6912d8fbbd6fbd7ee833c309d30a1c4"
+  revision = "849ea2db9519cb409b9c427e227bdaa282d81cb9"
 
 [[projects]]
   digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
@@ -123,14 +132,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e32edd8d81fe0447cb6855e2d2b0549b63717539513e09b3a1e4bb20d48f46c6"
+  digest = "1:70ad9a7394ce9ae89ca0ded5c02ddb0135ccfc636d41a4d3b7c3a5c8cf39fd53"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "5c8b2ff67527cb88b770f693cebf3799036d8bc0"
+  revision = "5766fd39f98ddd8d769ad4aedcee557dd28de90f"
 
 [[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
@@ -152,7 +161,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/kelseyhightower/envconfig",
     "github.com/raspberry-gateway/raspberry/cli",
+    "github.com/raspberry-gateway/raspberry/config",
     "github.com/raspberry-gateway/raspberry/gateway",
     "github.com/raspberry-gateway/raspberry/headers",
     "github.com/raspberry-gateway/raspberry/log",
