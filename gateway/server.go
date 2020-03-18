@@ -80,9 +80,7 @@ func initialliseSystem(ctx context.Context) error {
 
 	mainLog.Infof("Raspberry API gateway %s", VERSION)
 
-	if !isRunningTests() {
-		globalConf := config.Config{}
-	}
+	
 }
 
 func isRunningTests() bool {
@@ -90,4 +88,8 @@ func isRunningTests() bool {
 	v := testMode
 	runningTestsMu.RUnlock()
 	return v
+}
+
+func writePIDFile() error {
+	file := config.
 }

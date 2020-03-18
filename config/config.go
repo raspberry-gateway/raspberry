@@ -25,10 +25,9 @@ var (
 	globalMu sync.Mutex
 
 	Default = Config{
-		ListenPort: 8080,
-		Secret: "352d20ee67be67f6340b4c0605b044b7",
-		TemplatePath: "templates"
-		
+		ListenPort:   8080,
+		Secret:       "352d20ee67be67f6340b4c0605b044b7",
+		TemplatePath: "templates",
 	}
 )
 

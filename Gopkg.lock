@@ -78,7 +78,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f02b3c1c0ef7721563c34dfbadf2c8ed04934fb20adacc23daaa144b1503ed41"
+  digest = "1:0721d9965a66c011fd008158ecde7424fdbcbb328012f197fe73923c4f66633c"
   name = "github.com/raspberry-gateway/raspberry"
   packages = [
     "cli",
@@ -88,7 +88,7 @@
     "log",
   ]
   pruneopts = "UT"
-  revision = "849ea2db9519cb409b9c427e227bdaa282d81cb9"
+  revision = "d56f8376abfa6def6d5ab74815a8b53f5a6f5516"
 
 [[projects]]
   digest = "1:274f67cb6fed9588ea2521ecdac05a6d62a8c51c074c1fccc6a49a40ba80e925"
@@ -128,7 +128,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "f7b00557c8c46a1ea4b035cae84f52028c2c0564"
+  revision = "1b76d66859c6111b3d5c3ea6600ea44dc188bf12"
 
 [[projects]]
   branch = "master"
